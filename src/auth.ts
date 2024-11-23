@@ -34,6 +34,7 @@ export const {
         if (!parsedCredentials.success) return null;
 
         const { email, password } = parsedCredentials.data;
+
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) return null;
