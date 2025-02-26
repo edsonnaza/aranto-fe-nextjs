@@ -27,22 +27,32 @@ export const {
   providers: [
     Credentials({
       async authorize(credentials): Promise<AuthUser | null> {
+        console.log("Credenciales recibidas:", credentials);
         const parsedCredentials = z
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
 
-        if (!parsedCredentials.success) return null;
+          if (!parsedCredentials.success) {
+            console.log("❌ Error en validación de credenciales");
+            return null;
+          }
 
         const { email, password } = parsedCredentials.data;
 
         const user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user) return null;
+        if (!user) {
+          console.log("❌ Usuario no encontrado");
+          return null;
+        }
 
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
-        if (!passwordsMatch) return null;
-
+        if (!passwordsMatch) {
+          console.log("❌ Contraseña incorrecta");
+          return null;
+        }
+        console.log("✅ Usuario autenticado:", user);
         return {
           id: user.id,
           email: user.email,
@@ -57,12 +67,14 @@ export const {
       if (user) {
         token.role = (user as AuthUser).role;
       }
+      console.log({token})
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.role = token.role as Role;
       }
+      console.log({session})
       return session;
     },
   },

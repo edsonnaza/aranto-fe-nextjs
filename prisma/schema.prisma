@@ -8,17 +8,412 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String?
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
+  id                         String              @id @default(uuid())
+  name                       String?
+  email                      String              @unique
+  password                   String
+  role                       Role                @default(SUPER)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  agendasCreadas             Agenda[]            @relation("CreadorAgenda")
+  slotsAsignados             AgendaSlot[]        @relation("AsignadorSlot")
+  agendaSlotsPaciente        AgendaSlot[]        @relation("PacienteSlot")
+  Caja                       Caja[]              @relation("UsuarioCierreCaja")
+  CajaUsuario                Caja[]              @relation("UsuarioCaja")
+  CajaEgreso                 CajaEgreso[]
+  CajaOtrosIngresos          CajaOtrosIngresos[]
+  estudiosRegistrados        EstudiosPaciente[]
+  HistoriaClinicaPaciente    HistoriaClinica[]   @relation("PacienteHistoria")
+  HistoriaClinicaProfesional HistoriaClinica[]   @relation("ProfesionalHistoria")
+  profesional                Profesional?
+  recepcionesCreadas         Recepcion[]         @relation("CreadorRecepcion")
+}
+
+model Profesional {
+  id                  String                    @id @default(uuid())
+  nombres             String
+  apellidos           String
+  email               String                    @unique
+  contacto            String
+  status              Boolean                   @default(true)
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  usuarioId           String?                   @unique
+  agendas             Agenda[]
+  ComisionProfesional ComisionProfesional[]
+  estudiosSolicitados EstudiosPaciente[]
+  usuario             User?                     @relation(fields: [usuarioId], references: [id])
+  especialidades      ProfesionalEspecialidad[]
+  recepciones         Recepcion[]               @relation("ProfesionalRecepcion")
+  VentaCarrito        VentaCarrito[]
+}
+
+model Paciente {
+  id               String             @id @default(uuid())
+  nombres          String
+  apellidos        String
+  email            String             @unique
+  direccion        String?
+  fechaNacimiento  DateTime
+  contacto         String
+  sexo             Sexo
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  doc_nro          String
+  estudiosPaciente EstudiosPaciente[]
+  recepciones      Recepcion[]
+  seguros          SeguroPaciente[]
+  VentaCarrito     VentaCarrito[]
+}
+
+model Seguro {
+  id          Int              @id @default(autoincrement())
+  nombre      String           @unique
+  descripcion String?
+  status      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  precios     PrecioProducto[]
+  pacientes   SeguroPaciente[]
+}
+
+model SeguroPaciente {
+  pacienteId String   @map("paciente_id")
+  seguroId   Int      @map("seguro_id")
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+  seguro     Seguro   @relation(fields: [seguroId], references: [id], onDelete: Cascade)
+
+  @@id([pacienteId, seguroId])
+}
+
+model Especialidad {
+  id            Int                       @id @default(autoincrement())
+  nombre        String                    @unique
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  profesionales ProfesionalEspecialidad[]
+}
+
+model ProfesionalEspecialidad {
+  especialidadId Int
+  profesionalId  String
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id])
+  profesional    Profesional  @relation(fields: [profesionalId], references: [id])
+
+  @@id([profesionalId, especialidadId])
+}
+
+model Estudios {
+  id               Int                @id @default(autoincrement())
+  nombre           String             @unique
+  descripcion      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  estudiosPaciente EstudiosPaciente[]
+}
+
+model EstudiosPaciente {
+  id            String                       @id @default(uuid())
+  pacienteId    String
+  estudioId     Int
+  profesionalId String
+  usuarioId     String
+  descripcion   String
+  linkResultado String?
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  estudio       Estudios                     @relation(fields: [estudioId], references: [id])
+  paciente      Paciente                     @relation(fields: [pacienteId], references: [id])
+  profesional   Profesional                  @relation(fields: [profesionalId], references: [id])
+  usuario       User                         @relation(fields: [usuarioId], references: [id])
+  resultados    ResultadosEstudiosPaciente[]
+}
+
+model ResultadosEstudiosPaciente {
+  id                 String           @id @default(uuid())
+  estudiosPacienteId String
+  archivoURL         String
+  tipoArchivo        String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  estudiosPaciente   EstudiosPaciente @relation(fields: [estudiosPacienteId], references: [id])
+}
+
+model invoices {
+  id          String    @id @default(uuid()) @db.Char(36)
+  customer_id String    @db.Char(36)
+  amount      Int
+  status      String
+  date        DateTime
+  customer    customers @relation(fields: [customer_id], references: [id])
+}
+
+model customers {
+  id        String     @id @default(uuid()) @db.Char(36)
+  name      String
+  email     String
+  image_url String
+  invoices  invoices[]
+}
+
+model revenue {
+  month   String @unique
+  revenue Int
+}
+
+model product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Decimal
+  image       String
+  category_id Int
+  category    category @relation(fields: [category_id], references: [id])
+
+  @@index([category_id])
+}
+
+model category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String
+  products    product[]
+}
+
+model Agenda {
+  id            String       @id @default(uuid())
+  profesionalId String
+  creadoPorId   String
+  fechaInicio   DateTime
+  fechaFin      DateTime
+  duracionSlot  Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  creadoPor     User         @relation("CreadorAgenda", fields: [creadoPorId], references: [id])
+  profesional   Profesional  @relation(fields: [profesionalId], references: [id])
+  slots         AgendaSlot[]
+  recepciones   Recepcion[]
+}
+
+model AgendaSlot {
+  id            String     @id @default(uuid())
+  agendaId      String
+  horarioInicio DateTime
+  horarioFin    DateTime
+  estado        EstadoSlot @default(DISPONIBLE)
+  pacienteId    String?
+  asignadoPorId String?
+  eliminado     Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  agenda        Agenda     @relation(fields: [agendaId], references: [id])
+  asignadoPor   User?      @relation("AsignadorSlot", fields: [asignadoPorId], references: [id])
+  paciente      User?      @relation("PacienteSlot", fields: [pacienteId], references: [id])
+}
+
+model Recepcion {
+  id             String         @id @default(uuid())
+  pacienteId     String
+  agendaId       String?
+  profesionalId  String
+  motivoConsulta MotivoConsulta
+  descripcion    String?
+  estadoEspera   EstadoEspera   @default(EN_ESPERA)
+  fechaRegistro  DateTime       @default(now())
+  creadoPorId    String
+  notas          String?
+  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime       @default(now())
+  agenda         Agenda?        @relation(fields: [agendaId], references: [id])
+  creadoPor      User           @relation("CreadorRecepcion", fields: [creadoPorId], references: [id])
+  paciente       Paciente       @relation(fields: [pacienteId], references: [id])
+  profesional    Profesional    @relation("ProfesionalRecepcion", fields: [profesionalId], references: [id])
+  VentaCarrito   VentaCarrito[]
+}
+
+/// Ventas y comisiones ///
+model Producto {
+  id               String                @id @default(uuid())
+  nombre           String
+  descripcion      String?
+  categoria        CategoriaProducto     @default(OTROS)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  comisiones       ComisionProfesional[]
+  precios          PrecioProducto[]
+  VentaCarritoItem VentaCarritoItem[]
+}
+
+model PrecioProducto {
+  id         String   @id @default(uuid())
+  productoId String
+  seguroId   Int
+  precio     Decimal
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  producto   Producto @relation(fields: [productoId], references: [id])
+  seguro     Seguro   @relation(fields: [seguroId], references: [id])
+}
+
+model ComisionProfesional {
+  id            String         @id @default(uuid())
+  profesionalId String
+  productoId    String?
+  porcentaje    Decimal
+  estatus       EstadoComision @default(ACTIVO)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  producto      Producto?      @relation(fields: [productoId], references: [id])
+  profesional   Profesional    @relation(fields: [profesionalId], references: [id])
+}
+
+/// Venta Carrito
+model VentaCarrito {
+  id                 String             @id @default(uuid())
+  recepcionId        String
+  pacienteId         String
+  profesionalId      String
+  estadoPago         EstadoPago         @default(PENDIENTE)
+  comisionPagada     Boolean            @default(false)
+  porcentajeComision Decimal
+  total              Decimal
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  paciente           Paciente           @relation(fields: [pacienteId], references: [id])
+  profesional        Profesional        @relation(fields: [profesionalId], references: [id])
+  recepcion          Recepcion          @relation(fields: [recepcionId], references: [id])
+  items              VentaCarritoItem[]
+}
+
+model VentaCarritoItem {
+  id             String       @id @default(uuid())
+  ventaId        String
+  productoId     String
+  cantidad       Int
+  precioUnitario Decimal
+  subtotal       Decimal
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  producto       Producto     @relation(fields: [productoId], references: [id])
+  venta          VentaCarrito @relation(fields: [ventaId], references: [id])
+}
+
+model Caja {
+  id                 Int                 @id @default(autoincrement())
+  usuarioId          String
+  montoApertura      Decimal
+  totalVentas        Decimal             @default(0)
+  montoEgresos       Decimal             @default(0)
+  montoOtrosIngresos Decimal             @default(0)
+  montoFinalCierre   Decimal?
+  fechaApertura      DateTime            @default(now())
+  fechaCierre        DateTime?
+  usuarioCierreId    String?
+  estado             EstadoCaja          @default(ABIERTO)
+  eliminado          Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  usuarioCierre      User?               @relation("UsuarioCierreCaja", fields: [usuarioCierreId], references: [id])
+  usuario            User                @relation("UsuarioCaja", fields: [usuarioId], references: [id])
+  CajaEgreso         CajaEgreso[]
+  CajaOtrosIngresos  CajaOtrosIngresos[]
+}
+
+model CajaEgreso {
+  id        String   @id @default(uuid())
+  cajaId    Int
+  usuarioId String
+  motivo    String
+  monto     Decimal
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  caja      Caja     @relation(fields: [cajaId], references: [id])
+  usuario   User     @relation(fields: [usuarioId], references: [id])
+}
+
+model CajaOtrosIngresos {
+  id        String   @id @default(uuid())
+  cajaId    Int
+  usuarioId String
+  concepto  String
+  monto     Decimal
+  createdAt DateTime @default(now())
+  caja      Caja     @relation(fields: [cajaId], references: [id])
+  usuario   User     @relation(fields: [usuarioId], references: [id])
+}
+
+model HistoriaClinica {
+  id              String   @id @default(uuid())
+  pacienteId      String
+  profesionalId   String
+  contenido       String
+  numeroRecepcion String?
+  createdAt       DateTime @default(now())
+  statusEliminado Boolean  @default(true)
+  paciente        User     @relation("PacienteHistoria", fields: [pacienteId], references: [id])
+  profesional     User     @relation("ProfesionalHistoria", fields: [profesionalId], references: [id])
 }
 
 enum Role {
+  SUPER
   ADMIN
   MANAGER
   USER
+  MEDICO
+  ENFERMERO
+  RECEPCIONISTA
+}
+
+enum Sexo {
+  HOMBRE
+  MUJER
+}
+
+enum EstadoSlot {
+  DISPONIBLE
+  OCUPADO
+  AGENDADO
+  BLOQUEADO
+  CANCELADO
+  ELIMINADO
+}
+
+enum MotivoConsulta {
+  DOLOR_DE_GARGANTA
+  DOLOR_DE_OIDO
+  DOLOR_DE_ESTOMAGO
+  FIEBRE
+  DIFICULTAD_RESPIRATORIA
+  OTRO
+}
+
+enum EstadoEspera {
+  EN_ESPERA
+  ATENDIDO
+  DERIVADO
+  CANCELADO
+}
+
+enum CategoriaProducto {
+  SERVICIOS
+  ESTUDIOS
+  CONSULTAS
+  MEDICAMENTOS
+  DESCARTABLES
+  OTROS
+}
+
+enum EstadoComision {
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  CANCELADO
+}
+
+enum EstadoCaja {
+  ABIERTO
+  CERRADO
 }

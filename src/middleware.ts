@@ -1,5 +1,5 @@
-import NextAuth from "next-auth";
-import { auth } from "./auth";
+//import NextAuth from "next-auth";
+import { auth } from "./app/api/auth/[...nextauth]/auth";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;

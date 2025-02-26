@@ -20,7 +20,7 @@ export function LoginForm() {
       });
 
       if (response?.error) {
-        setError("Invalid credentials");
+        setError("Credentiales no válidas");
         return;
       }
 
@@ -41,7 +41,7 @@ export function LoginForm() {
       <div className="rounded-md shadow-sm -space-y-px">
         <div>
           <label htmlFor="email" className="sr-only">
-            Email address
+            Email
           </label>
           <input
             id="email"
@@ -54,7 +54,7 @@ export function LoginForm() {
         </div>
         <div>
           <label htmlFor="password" className="sr-only">
-            Password
+            Contraseña
           </label>
           <input
             id="password"
@@ -72,7 +72,7 @@ export function LoginForm() {
           type="submit"
           className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
-          Sign in
+          Ingresar
         </button>
       </div>
     </form>

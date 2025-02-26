@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { Outfit } from "next/font/google";
+import "./globals.css";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/autoplay";
+import { SidebarProvider } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { SessionProvider } from "next-auth/react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -11,6 +20,11 @@ const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit-sans",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -26,10 +40,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.variable} dark:bg-gray-900`}
         suppressHydrationWarning={true}
       >
-        {children}
+         <ThemeProvider>
+          <SessionProvider>
+          <SidebarProvider>{children}</SidebarProvider>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
