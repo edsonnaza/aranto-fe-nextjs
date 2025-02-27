@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 
 export async function middleware(req: NextRequest) {
-  console.log("Cookies:", req.cookies); // Verifica las cookies
+ // console.log("Cookies:", req.cookies); // Verifica las cookies
 
   // Obtén el valor de la cookie directamente
   const tokenNextAuth = req.cookies.get('next-auth.session-token')?.value;

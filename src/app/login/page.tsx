@@ -1,4 +1,4 @@
-import { LoginForm } from "./login-form"
+import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
@@ -6,11 +6,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-           Iniciar sessión
+            Iniciar sesión
           </h2>
         </div>
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }
