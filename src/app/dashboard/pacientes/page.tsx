@@ -1,12 +1,10 @@
-import { auth } from "@/app/api/auth/[...nextauth]/auth"
-import { redirect } from "next/navigation"
+//import { auth } from "@/app/api/auth/[...nextauth]/--auth"
+//import { redirect } from "next/navigation"
  import PacienteTable from "@/components/pacientes/PacienteTable";
 export default async function DashboardPage() {
-  const session = await auth()
+ // const session = await auth()
   
-  if (!session) {
-    redirect("/login")
-  }
+  
 
   return (
     

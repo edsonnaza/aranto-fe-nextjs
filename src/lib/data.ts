@@ -103,7 +103,7 @@ export async function fetchFilteredInvoices(query: string, currentPage: number) 
 
 export async function fetchInvoicesPages(query: string) {
   try {
-    const data = await prisma.$queryRawUnsafe(`
+    const data = await prisma.$queryRawUnsafe<{ count: bigint }[]>(`
       SELECT COUNT(*) AS count
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
@@ -116,7 +116,7 @@ export async function fetchInvoicesPages(query: string) {
       `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`
     );
 
-    return Math.ceil(Number(data[0]?.count || 0) / ITEMS_PER_PAGE);
+    return Math.ceil(Number((data[0] as { count: bigint })?.count || 0) / ITEMS_PER_PAGE);
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch total number of invoices.');
@@ -153,6 +153,8 @@ export async function fetchCustomers() {
     throw new Error('Failed to fetch all customers.');
   }
 }
+
+
 
 export async function fetchFilteredCustomers(query: string) {
   try {

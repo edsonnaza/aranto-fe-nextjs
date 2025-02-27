@@ -1,12 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import {  useSession } from "next-auth/react";
+ 
 
 export function LoginForm() {
-  const router = useRouter();
+  const { data: session, status } = useSession();
   const [error, setError] = useState("");
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/"); // Redirige si ya está autenticado
+    }
+  }, [status, router, session]);
+
+  if (status === "loading") {
+    return <p className="text-center text-gray-600">Verificando sesión...</p>; // Mostramos solo un mensaje
+  }
+
+  if (status === "authenticated") {
+    return null; // No renderizamos nada si está autenticado
+  }
+
+
+ 
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,17 +41,17 @@ export function LoginForm() {
       });
 
       if (response?.error) {
-        setError("Credentiales no válidas");
+        setError("Credenciales no válidas");
         return;
       }
 
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      setError("Something went wrong");
+      setError("Algo anda mal!"+error);
     }
   }
-
+ 
   return (
     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
       {error && (

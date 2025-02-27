@@ -1,15 +1,16 @@
-import { auth } from "@/app/api/auth/[...nextauth]/auth"
-import { redirect } from "next/navigation"
-import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
+//import { auth } from "@/app/api/auth/[...nextauth]/auth"
+//import { redirect } from "next/navigation"
+//import { EcommerceMetrics } from "@/components/ecommerce/EcommerceMetrics";
 import RecentOrders from "@/components/ecommerce/RecentOrders" 
-import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
-
+//import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
+//import { useSession } from "next-auth/react";
 export default async function DashboardPage() {
-  const session = await auth()
+  //const session = await auth()
+  // const { data: session } =  useSession(); // Obtiene la sesión
   
-  if (!session) {
-    redirect("/login")
-  }
+  // if (!session) {
+  //   redirect("/login")
+  // }
 
   return (
     

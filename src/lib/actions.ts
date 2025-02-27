@@ -6,21 +6,24 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 //import { signIn } from '@/auth';
 import { signIn } from "next-auth/react";
-import { AuthError } from 'next-auth';
+import AuthError  from 'next-auth';
 
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    await signIn('credentials', {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+      redirect: false,
+    });
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
+      if (error instanceof Error && error.message.includes('CredentialsSignin')) {
+        return 'Invalid credentials.';
+      } else {
+        return 'Something went wrong.';
       }
     }
     throw error;
@@ -45,7 +48,7 @@ const FormSchema = z.object({
 });
 console.log({FormSchema})
 export async function createInvoice(formData: FormData) {
-    var success = false;
+    let success = false;
     //Validate form fields using Zod.
     const validatedFields = FormSchema.safeParse({
       customerId: formData.get('customerId'),

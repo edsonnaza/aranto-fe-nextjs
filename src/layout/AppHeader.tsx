@@ -95,7 +95,7 @@ const AppHeader: React.FC = () => {
             <Image
               width={154}
               height={32}
-              className="hidden dark:block"
+              className=" ring-slate-300 hidden dark:block "
               src="./images/logo/logo-dark.svg"
               alt="Logo"
             />

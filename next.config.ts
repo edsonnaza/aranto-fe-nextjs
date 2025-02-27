@@ -11,4 +11,9 @@ const nextConfig: NextConfig = {
   },
 };
 
+module.exports = {
+  reactStrictMode: true,
+  trailingSlash: false, // Asegúrate de que está en `false`
+};
+
 export default nextConfig;

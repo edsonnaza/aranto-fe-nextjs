@@ -25,8 +25,8 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   return (
     <div className="relative">
       <button
-        onClick={toggleDropdown} className="dropdown-toggle"
-        className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
+        onClick={toggleDropdown}  
+        className="drowpdown-toggle flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
           <Image
