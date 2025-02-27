@@ -5,8 +5,11 @@ export async function middleware(req: NextRequest) {
  // console.log("Cookies:", req.cookies); // Verifica las cookies
 
   // Obtén el valor de la cookie directamente
-  const tokenNextAuth = req.cookies.get('next-auth.session-token')?.value;
+  //const tokenNextAuth = req.cookies.get('next-auth.session-token')?.value;
   const tokenAuthJs = req.cookies.get('authjs.session-token')?.value;
+  const tokenNextAuth = req.cookies.get('__Secure-next-auth.session-token')?.value 
+                   || req.cookies.get('next-auth.session-token')?.value;
+
 
   // console.log("Token next-auth.session-token:", tokenNextAuth); // Verifica el token JWT de next-auth
   // console.log("Token authjs.session-token:", tokenAuthJs); // Verifica el token JWT de authjs
