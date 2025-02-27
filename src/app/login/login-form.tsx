@@ -15,7 +15,7 @@ export function LoginForm() {
     if (status === "authenticated") {
       router.push("/dashboard");
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
