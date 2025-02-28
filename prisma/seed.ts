@@ -1,28 +1,40 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { estudios, seguros, especialidades } from "./data"; // Importa los datos desde data.ts
+import { estudios, seguros, especialidades, users } from "./data"; // Importa los datos desde data.ts
 
 const prisma = new PrismaClient();
 
 async function main() {
   // Dados del superusuario
-  const name = "Edson Sanchez";
-  const email = "edsonnaza@gmail.com";
-  const password = "Login123";
   
-
-  // Criptografía de la contraseña
-  const hashPassword = await bcrypt.hash(password, 10);
-
   try {
     // Crear el superusuario
-    await prisma.user.create({
-      data: { email, name, password: hashPassword},
-    });
-    console.log("✅ Superusuario creado.");
+    for (const user of users) {
+      // Criptografía de la contraseña
+      const hashPassword = await bcrypt.hash(user.password, 10);
+  
+      await prisma.user.upsert({
+        where: { email: user.email }, // Solo se puede usar `email` porque es `@unique`
+        update: {
+          name: user.name,
+          password: hashPassword,
+          role: user.role as Role, // Asegúrate de que el campo existe
+        },
+        create: {
+          name: user.name,
+          email: user.email,
+          password: hashPassword,
+          role: user.role as Role,
+        },
+      });
+    }
+    console.log("✅ Usuarios insertados correctamente.");
   } catch (error) {
-    console.error("❌ Error al crear el superusuario:", error);
+    console.error("❌ Error al insertar usuarios:", error);
+  
+     
   }
+  
 
   try {
     // Insertar los estudios

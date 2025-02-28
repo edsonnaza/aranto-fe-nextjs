@@ -1,3 +1,17 @@
+export const users = [
+  { 
+      name:"Dr. Demo House",
+      email: "demo@email.com",
+      password: "demo123",
+      role: "MEDICO"
+  },
+  { 
+    name:"Edson Sanchez",
+    email: "edsonnaza@gmail.com",
+    password: "Login123",
+    role:"SUPER"
+  },
+]
 export const estudios = [
     {
       id: 1,
