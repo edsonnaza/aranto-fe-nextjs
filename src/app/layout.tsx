@@ -9,11 +9,11 @@ import { SidebarProvider } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Outfit } from "next/font/google";
 
 import { LoadingProvider } from "@/context/LoadingContext";
-import LoadingComponent from "@/components/Loading/LoadingComponent"; // 👈 Importamos el componente de carga
+import LoadingComponent from "@/components/Loading/LoadingComponent";
 
 const outfit = Outfit({
   variable: "--font-outfit-sans",
@@ -26,11 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${outfit.variable} dark:bg-gray-900`} suppressHydrationWarning>
         <ThemeProvider>
           <SessionProvider>
-            <LoadingProvider> {/* ✅ Envolvemos todo con el LoadingProvider */}
-              <LoadingComponent /> {/* ✅ Agregamos el componente de carga */}
-              <AuthGuard>
-                <SidebarProvider>{children}</SidebarProvider>
-              </AuthGuard>
+            <LoadingProvider>
+              <Suspense fallback={<LoadingComponent />}>
+                <AuthGuard>
+                  <SidebarProvider>{children}</SidebarProvider>
+                </AuthGuard>
+              </Suspense>
             </LoadingProvider>
           </SessionProvider>
         </ThemeProvider>
@@ -48,10 +49,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (status === "unauthenticated" || !session) {
       router.push("/login");
     }
-    console.log({ status, router, session });
   }, [status, router, session]);
 
-  if (status === "loading") return <LoadingComponent />; // 🔥 Reemplazamos el texto "Loading..." por el Spinner global
+  if (status === "loading")
+    return (
+      <Suspense fallback={<LoadingComponent />}>
+        <LoadingComponent />
+      </Suspense>
+    );
 
   return <>{children}</>;
 }
