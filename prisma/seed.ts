@@ -1,54 +1,77 @@
 import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import { estudios, seguros, especialidades, users } from "./data"; // Importa los datos desde data.ts
+import { estudios, seguros, especialidades, users, profesionales } from "./data"; // Importa los datos desde data.ts
 
 const prisma = new PrismaClient();
 
 async function main() {
   // Dados del superusuario
   
-  try {
-    // Crear el superusuario
-    for (const user of users) {
-      // Criptografía de la contraseña
-      const hashPassword = await bcrypt.hash(user.password, 10);
-  
-      await prisma.user.upsert({
-        where: { email: user.email }, // Solo se puede usar `email` porque es `@unique`
-        update: {
-          name: user.name,
-          password: hashPassword,
-          role: user.role as Role, // Asegúrate de que el campo existe
-        },
-        create: {
-          name: user.name,
-          email: user.email,
-          password: hashPassword,
-          role: user.role as Role,
-        },
-      });
+   try {
+      // Crear el superusuario
+      for (const user of users) {
+        // Criptografía de la contraseña
+        const hashPassword = await bcrypt.hash(user.password, 10);
+    
+        await prisma.user.upsert({
+          where: { email: user.email }, // Solo se puede usar `email` porque es `@unique`
+          update: {
+            name: user.name,
+            password: hashPassword,
+            role: user.role as Role, // Asegúrate de que el campo existe
+          },
+          create: {
+            name: user.name,
+            email: user.email,
+            password: hashPassword,
+            role: user.role as Role,
+          },
+        });
+      }
+      console.log("✅ Usuarios insertados correctamente.");
+      } catch (error) {
+        console.error("❌ Error al insertar usuarios:", error);
     }
-    console.log("✅ Usuarios insertados correctamente.");
-  } catch (error) {
-    console.error("❌ Error al insertar usuarios:", error);
-  
-     
-  }
+
+    try {
+      // Crear Profesionales
+      for (const prof of profesionales) {
+        await prisma.profesional.upsert({
+          where: { email: prof.email }, // Solo se puede usar `email` porque es `@unique`
+          update: {
+            nombres: prof.nombres,
+            apellidos: prof.apellidos,
+            email:prof.email,
+            contacto:prof.contacto
+            
+          },
+          create: {
+            nombres: prof.nombres,
+            apellidos: prof.apellidos,
+            email: prof.email,
+            contacto: prof.contacto
+          },
+        });
+      }
+      console.log("✅ Profesionales insertados correctamente.");
+      } catch (error) {
+        console.error("❌ Error al insertar profesionales:", error);
+    }
   
 
-  try {
-    // Insertar los estudios
-    for (const estudio of estudios) {
-      await prisma.estudios.upsert({
-        where: { nombre: estudio.nombre }, // Evita duplicados
-        update: {},
-        create: estudio,
-      });
+    try {
+      // Insertar los estudios
+      for (const estudio of estudios) {
+        await prisma.estudios.upsert({
+          where: { nombre: estudio.nombre }, // Evita duplicados
+          update: {},
+          create: estudio,
+        });
+      }
+      console.log("✅ Estudios insertados correctamente.");
+    } catch (error) {
+      console.error("❌ Error al insertar estudios:", error);
     }
-    console.log("✅ Estudios insertados correctamente.");
-  } catch (error) {
-    console.error("❌ Error al insertar estudios:", error);
-  }
 
   try {
     // Restablecer el valor del contador AUTO_INCREMENT de seguro en PostgreSQL

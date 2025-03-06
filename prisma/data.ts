@@ -12,6 +12,33 @@ export const users = [
     role:"SUPER"
   },
 ]
+
+export const profesionales = [
+  { 
+   nombres: "Dr. Juan",
+   apellidos:"Bozzano ",
+   email: "drjuan@bozzano.com",
+   contacto: "+595985705718"
+  },
+
+  { 
+    nombres: "Dr. Daniel",
+    apellidos:"Santander",
+    email: "drdaniels@gmail.com",
+    contacto: "+595985123456"
+   },
+
+  { 
+    nombres: "Dr. Fredy",
+    apellidos:"Velazquez",
+    email: "drfreddy@gmail.com",
+    contacto: "+595983123456"
+   },
+
+
+]
+
+
 export const estudios = [
     {
       id: 1,

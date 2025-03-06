@@ -60,12 +60,14 @@ const authOptions: AuthOptions = {
       session?: Session;
     }) {
       if (user) {
+        token.id = user.id;
         token.role = (user as AuthUser).role;
       }
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
       if (session.user) {
+        session.user.id = token.id as string; // Añadir el id a session.user
         session.user.role = token.role as Role;
       }
       return session;

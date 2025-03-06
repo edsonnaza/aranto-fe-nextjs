@@ -1,3 +1,26 @@
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+
+export const formatDate = (date: Date | string | number): string => {
+  const dateObj = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
+
+  if (isNaN(dateObj.getTime())) {
+    return "Fecha inválida"; // Manejo de fechas inválidas
+  }
+
+  return dateObj.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).split("/").join("-"); // Formato: DD-MM-YYYY
+};
+
+
 import { Revenue } from './definitions';
 
 export const formatCurrency = (amount: number) => {

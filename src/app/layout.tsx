@@ -11,7 +11,8 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { Outfit } from "next/font/google";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { LoadingProvider } from "@/context/LoadingContext";
 import LoadingComponent from "@/components/Loading/LoadingComponent";
 
@@ -29,7 +30,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <LoadingProvider>
               <Suspense fallback={<LoadingComponent />}>
                 <AuthGuard>
-                  <SidebarProvider>{children}</SidebarProvider>
+                  <SidebarProvider>
+                    {children}
+                    <ToastContainer
+                      position="top-right" // Posición del toast
+                      autoClose={5000}
+                      hideProgressBar={false}
+                      newestOnTop={false}
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                      theme="light"
+                      style={{ zIndex: 100000,
+                        top:'85px'
+                      }} // Asegurar un z-index alto
+                    />
+                  </SidebarProvider>
                 </AuthGuard>
               </Suspense>
             </LoadingProvider>

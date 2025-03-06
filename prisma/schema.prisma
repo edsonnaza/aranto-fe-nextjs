@@ -27,6 +27,8 @@ model User {
   HistoriaClinicaProfesional HistoriaClinica[]   @relation("ProfesionalHistoria")
   profesional                Profesional?
   recepcionesCreadas         Recepcion[]         @relation("CreadorRecepcion")
+
+  AgendaSlotLog AgendaSlotLog[]
 }
 
 model Profesional {
@@ -64,6 +66,8 @@ model Paciente {
   recepciones      Recepcion[]
   seguros          SeguroPaciente[]
   VentaCarrito     VentaCarrito[]
+
+  AgendaSlot AgendaSlot[]
 }
 
 model Seguro {
@@ -193,23 +197,78 @@ model Agenda {
   profesional   Profesional  @relation(fields: [profesionalId], references: [id])
   slots         AgendaSlot[]
   recepciones   Recepcion[]
+
+  AgendaDia AgendaDia[]
+}
+
+model AgendaSlotLog {
+  id            String     @id @default(uuid())
+  agendaSlotId  String
+  estadoAnterior EstadoSlot
+  estadoNuevo   EstadoSlot
+  pacienteId    String?    // ID del paciente asociado al slot en ese momento
+  motivo        String?    // Motivo del cambio (obligatorio para CANCELADO/ELIMINADO)
+  modificadoPorId String   // Quién hizo el cambio
+  createdAt     DateTime   @default(now())
+  agendaSlot    AgendaSlot @relation(fields: [agendaSlotId], references: [id])
+  modificadoPor User       @relation(fields: [modificadoPorId], references: [id])
 }
 
 model AgendaSlot {
-  id            String     @id @default(uuid())
+  id            String         @id @default(uuid())
   agendaId      String
   horarioInicio DateTime
   horarioFin    DateTime
-  estado        EstadoSlot @default(DISPONIBLE)
+  estado        EstadoSlot     @default(DISPONIBLE)
   pacienteId    String?
   asignadoPorId String?
-  eliminado     Boolean    @default(false)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  agenda        Agenda     @relation(fields: [agendaId], references: [id])
-  asignadoPor   User?      @relation("AsignadorSlot", fields: [asignadoPorId], references: [id])
-  paciente      User?      @relation("PacienteSlot", fields: [pacienteId], references: [id])
+  eliminado     Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  agenda        Agenda         @relation(fields: [agendaId], references: [id])
+  asignadoPor   User?          @relation("AsignadorSlot", fields: [asignadoPorId], references: [id])
+  paciente      Paciente?      @relation(fields: [pacienteId], references: [id])
+  AgendaDia     AgendaDia[]
+  logs          AgendaSlotLog[] // Relación con la tabla de auditoría
+  motivoConsulta String?    // Nuevo campo para almacenar el motivo de consulta
+  User User[] @relation("PacienteSlot")
 }
+
+enum EstadoSlot {
+  DISPONIBLE
+  OCUPADO
+  AGENDADO
+  BLOQUEADO
+  CANCELADO
+  ELIMINADO
+}
+
+model AgendaDia {
+  id         String   @id @default(uuid())
+  agendaId   String
+  diaSemana  DiaSemana
+  fechaInicio DateTime
+  fechaFin    DateTime
+  horarioMananaInicio DateTime?
+  horarioMananaFin    DateTime?
+  horarioTardeInicio  DateTime?
+  horarioTardeFin     DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  agenda     Agenda   @relation(fields: [agendaId], references: [id])
+  slots      AgendaSlot[]
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
 
 model Recepcion {
   id             String         @id @default(uuid())
@@ -368,14 +427,7 @@ enum Sexo {
   MUJER
 }
 
-enum EstadoSlot {
-  DISPONIBLE
-  OCUPADO
-  AGENDADO
-  BLOQUEADO
-  CANCELADO
-  ELIMINADO
-}
+ 
 
 enum MotivoConsulta {
   DOLOR_DE_GARGANTA
