@@ -1,4 +1,3 @@
-// components/Calendar/Calendar.tsx
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
@@ -6,12 +5,12 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { EventInput, EventClickArg, EventContentArg } from "@fullcalendar/core";
 import esLocale from "@fullcalendar/core/locales/es";
-import { useModal } from "@/hooks/useModal";
 import { Modal } from "@/components/ui/modal";
 import { registrarPacienteEnSlot, buscarPacientesPorNombre, getSlotPatientDetails } from "@/lib/actions/agenda";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
 import LoadingButton from "../ui/button/LoadingButton";
+import { formatDate } from "@/lib/utils";
 
 interface CalendarEvent extends EventInput {
   id: string;
@@ -28,7 +27,6 @@ interface PacienteSuggestion {
   sexo: "HOMBRE" | "MUJER";
   fechaNacimiento: Date;
   doc_nro:string;
-  motivoConsulta:string;
 }
 
 type EstadoSlot = "DISPONIBLE" | "OCUPADO" | "AGENDADO" | "BLOQUEADO" | "CANCELADO" | "ELIMINADO";
@@ -44,7 +42,7 @@ interface CalendarProps {
 //   sexo: "HOMBRE" | "MUJER";
 //   fechaNacimiento: string;
 //   doc_nro: string;
-//   motivoConsulta: string; // Añadimos motivoConsulta al tipo
+//   motivoConsulta: string;
 // }
 
 const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
@@ -52,82 +50,86 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
   const { data: session } = useSession();
   const asignadoPorId = session?.user?.id;
 
-  const [selectedSlot, setSelectedSlot] = useState<CalendarEvent | null>(null);
-  const [nombres, setNombres] = useState("");
-  const [apellidos, setApellidos] = useState("");
-  const [contacto, setContacto] = useState("");
-  const [sexo, setSexo] = useState<"HOMBRE" | "MUJER" | "">("");
-  const [fechaNacimiento, setFechaNacimiento] = useState("");
-  const [motivoConsulta, setMotivoConsulta] = useState("");
-  const [docNro, setDocNro] = useState("");
+  // Manejo del estado del formulario con un solo useState
+  const [formData, setFormData] = useState({
+    nombres: "",
+    apellidos: "",
+    contacto: "",
+    sexo: "",
+    fechaNacimiento: "",
+    motivoConsulta: "",
+    docNro: "",
+  });
   const [nuevoEstado, setNuevoEstado] = useState<EstadoSlot>("OCUPADO");
   const [isLoading, setIsLoading] = useState(false);
   const [sugerencias, setSugerencias] = useState<PacienteSuggestion[]>([]);
-  const { isOpen, openModal, closeModal } = useModal();
+  const [selectedSlot, setSelectedSlot] = useState<CalendarEvent | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
 
+  // Optimizar la lista de sugerencias con useEffect basado solo en nombres
   useEffect(() => {
-    console.log("Initial events:", initialEvents); // Depuración
     const fetchSugerencias = async () => {
-      if (nombres.length >= 2) {
-        const resultados = await buscarPacientesPorNombre(nombres) as PacienteSuggestion[];
+      if (formData.nombres.length >= 2) {
+        const resultados = await buscarPacientesPorNombre(formData.nombres) as PacienteSuggestion[];
         setSugerencias(resultados);
       } else {
         setSugerencias([]);
       }
     };
     fetchSugerencias();
-  }, [initialEvents, nombres]);
+  }, [formData.nombres]); // Dependencia solo en nombres
+
+  const openModal = () => setIsOpen(true);
+  const closeModal = () => {
+    setIsOpen(false);
+    setFormData({
+      nombres: "",
+      apellidos: "",
+      contacto: "",
+      sexo: "",
+      fechaNacimiento: "",
+      docNro: "",
+      motivoConsulta: "",
+    }); // Limpiar el formulario al cerrar el modal
+    setSugerencias([]);
+  };
 
   const handleEventClick = async (clickInfo: EventClickArg) => {
     const slot = clickInfo.event as unknown as CalendarEvent;
-    console.log("Turno seleccionado:", slot); // Depuración
     setSelectedSlot(slot);
+
+    // Resetear formulario y establecer estado inicial
+    const initialFormData = {
+      nombres: "",
+      apellidos: "",
+      contacto: "",
+      sexo: "",
+      fechaNacimiento: "",
+      docNro: "",
+      motivoConsulta: "",
+    };
 
     if (slot.extendedProps.calendar !== "DISPONIBLE") {
       try {
         const patientData = await getSlotPatientDetails(slot.id);
-        console.log('getSlotPatientDetails',{patientData})
         if (patientData) {
-          const { nombres, apellidos, contacto, sexo, fechaNacimiento, doc_nro, motivoConsulta } = patientData;
-          setNombres(nombres);
-          setApellidos(apellidos);
-          setContacto(contacto);
-          setSexo(sexo);
-          setFechaNacimiento(fechaNacimiento);
-          setDocNro(doc_nro);
-          setMotivoConsulta(motivoConsulta);
+          setFormData({
+            ...patientData,
+            docNro: patientData.doc_nro,
+          }); // Asignar directamente los datos del paciente
           setNuevoEstado(slot.extendedProps.calendar);
         } else {
-          setNombres("");
-          setApellidos("");
-          setContacto("");
-          setSexo("");
-          setFechaNacimiento("");
-          setDocNro("");
-          setMotivoConsulta("");
+          setFormData(initialFormData);
           setNuevoEstado(slot.extendedProps.calendar);
         }
       } catch (error) {
-        console.error("Error al cargar los datos del paciente:", error);
-        toast.error("No se pudieron cargar los datos del paciente");
-        setNombres("");
-        setApellidos("");
-        setContacto("");
-        setSexo("");
-        setFechaNacimiento("");
-        setDocNro("");
-        setMotivoConsulta("");
+        toast.error("No se pudieron cargar los datos del paciente"+error);
+        setFormData(initialFormData);
         setNuevoEstado(slot.extendedProps.calendar);
       }
     } else {
-      setNombres("");
-      setApellidos("");
-      setContacto("");
-      setSexo("");
-      setFechaNacimiento("");
-      setDocNro("");
-      setMotivoConsulta("");
+      setFormData(initialFormData);
       setNuevoEstado("OCUPADO");
     }
 
@@ -136,19 +138,15 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
   };
 
   const handleSeleccionarSugerencia = (paciente: PacienteSuggestion) => {
-    setNombres(paciente.nombres);
-    setApellidos(paciente.apellidos);
-    setContacto(paciente.contacto);
-    setSexo(paciente.sexo);
-    setFechaNacimiento(
-      paciente.fechaNacimiento.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).split("/").join("-")
-    );
-    setDocNro(paciente.doc_nro); // Podrías incluir doc_nro en PacienteSuggestion si está disponible
-    setMotivoConsulta(paciente.motivoConsulta)
+    setFormData({
+      ...formData,
+      nombres: paciente.nombres,
+      apellidos: paciente.apellidos,
+      contacto: paciente.contacto,
+      sexo: paciente.sexo,
+      fechaNacimiento: formatDate(paciente.fechaNacimiento),
+      docNro: paciente.doc_nro,
+    });
     setSugerencias([]);
   };
 
@@ -157,7 +155,17 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
       toast.error("Faltan datos básicos para registrar el cambio");
       return;
     }
-    if ((nuevoEstado === "OCUPADO" || nuevoEstado === "AGENDADO") && (!nombres || !apellidos || !contacto || !sexo || !fechaNacimiento || !motivoConsulta || !docNro)) {
+
+    const requiredFields = [
+      formData.nombres,
+      formData.apellidos,
+      formData.contacto,
+      formData.sexo,
+      formData.fechaNacimiento,
+      formData.motivoConsulta,
+      formData.docNro,
+    ];
+    if ((nuevoEstado === "OCUPADO" || nuevoEstado === "AGENDADO") && requiredFields.some((field) => !field)) {
       toast.error("Faltan datos del paciente para estado OCUPADO o AGENDADO");
       return;
     }
@@ -166,22 +174,24 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     try {
       console.log("Enviando datos a registrarPacienteEnSlot:", {
         slotId: selectedSlot.id,
-        nombres, apellidos, contacto, sexo, fechaNacimiento, motivoConsulta, asignadoPorId, docNro, nuevoEstado,
+        ...formData,
+        asignadoPorId,
+        nuevoEstado,
       });
       const updatedSlot = await registrarPacienteEnSlot(
         selectedSlot.id,
-        nombres,
-        apellidos,
-        contacto,
-        sexo || "HOMBRE",
-        fechaNacimiento,
-        motivoConsulta,
+        formData.nombres,
+        formData.apellidos,
+        formData.contacto,
+        (formData.sexo === "HOMBRE" || formData.sexo === "MUJER" ? formData.sexo : "HOMBRE"),
+        formData.fechaNacimiento,
+        formData.motivoConsulta,
         asignadoPorId,
-        docNro,
+        formData.docNro,
         nuevoEstado
       );
 
-      console.log("Updated slot returned:", updatedSlot); // Depuración
+      console.log("Updated slot returned:", updatedSlot);
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === updatedSlot.id
@@ -189,7 +199,7 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
                 ...event,
                 title: nuevoEstado === "DISPONIBLE" || nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"
                   ? "Disponible"
-                  : `${nombres} ${apellidos} (${motivoConsulta})`,
+                  : `${formData.nombres} ${formData.apellidos} (${formData.motivoConsulta})`,
                 extendedProps: { calendar: nuevoEstado },
               }
             : event
@@ -197,7 +207,6 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
       );
 
       toast.success("Turno actualizado con éxito");
-      console.log("Cerrando el modal..."); // Log de depuración
       closeModal();
     } catch (error) {
       toast.error("Error al actualizar el slot");
@@ -265,8 +274,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="paciente-nombres"
                 type="text"
-                value={nombres}
-                onChange={(e) => setNombres(e.target.value)}
+                value={formData.nombres}
+                onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 placeholder="Ej. Juan"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
@@ -292,8 +301,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="paciente-apellidos"
                 type="text"
-                value={apellidos}
-                onChange={(e) => setApellidos(e.target.value)}
+                value={formData.apellidos}
+                onChange={(e) => setFormData({ ...formData, apellidos: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 placeholder="Ej. Pérez"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
@@ -306,8 +315,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="paciente-contacto"
                 type="text"
-                value={contacto}
-                onChange={(e) => setContacto(e.target.value)}
+                value={formData.contacto}
+                onChange={(e) => setFormData({ ...formData, contacto: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 placeholder="Ej. 123456789"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
@@ -320,8 +329,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="paciente-doc-nro"
                 type="text"
-                value={docNro}
-                onChange={(e) => setDocNro(e.target.value)}
+                value={formData.docNro}
+                onChange={(e) => setFormData({ ...formData, docNro: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 placeholder="Ej. 12345678"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
@@ -336,8 +345,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
                   <input
                     type="radio"
                     value="HOMBRE"
-                    checked={sexo === "HOMBRE"}
-                    onChange={() => setSexo("HOMBRE")}
+                    checked={formData.sexo === "HOMBRE"}
+                    onChange={() => setFormData({ ...formData, sexo: "HOMBRE" })}
                     className="mr-2"
                     disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
                   />
@@ -347,8 +356,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
                   <input
                     type="radio"
                     value="MUJER"
-                    checked={sexo === "MUJER"}
-                    onChange={() => setSexo("MUJER")}
+                    checked={formData.sexo === "MUJER"}
+                    onChange={() => setFormData({ ...formData, sexo: "MUJER" })}
                     className="mr-2"
                     disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
                   />
@@ -363,8 +372,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="paciente-fecha-nacimiento"
                 type="date"
-                value={fechaNacimiento.split("-").reverse().join("-")}
-                onChange={(e) => setFechaNacimiento(e.target.value.split("-").reverse().join("-"))}
+                value={formData.fechaNacimiento.split("-").reverse().join("-")} // Convertir DD-MM-YYYY a YYYY-MM-DD
+                onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value.split("-").reverse().join("-") })} // Convertir YYYY-MM-DD a DD-MM-YYYY
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
                 required
@@ -377,8 +386,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <input
                 id="motivo-consulta"
                 type="text"
-                value={motivoConsulta}
-                onChange={(e) => setMotivoConsulta(e.target.value)}
+                value={formData.motivoConsulta}
+                onChange={(e) => setFormData({ ...formData, motivoConsulta: e.target.value })}
                 className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                 placeholder="Ej. Consulta general"
                 disabled={nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"}
@@ -414,7 +423,7 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               type="button"
               isLoading={isLoading}
               onClick={handleRegistrarPaciente}
-              className="bg-brand-500 hover:bg-brand-600"
+              disabled={isLoading || !formData.nombres || !formData.apellidos || !formData.contacto || !formData.sexo || !formData.fechaNacimiento || !formData.motivoConsulta || !formData.docNro}
             >
               Guardar
             </LoadingButton>
@@ -427,7 +436,6 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
 
 const renderEventContent = (eventInfo: EventContentArg) => {
   const calendarType = eventInfo.event.extendedProps.calendar;
- // console.log("Rendering event:", eventInfo.event); // Depuración
   const colorMap: { [key: string]: string } = {
     DISPONIBLE: "bg-green-200 text-black",
     OCUPADO: "bg-red-200 text-black",

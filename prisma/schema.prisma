@@ -17,7 +17,7 @@ model User {
   updatedAt                  DateTime            @updatedAt
   agendasCreadas             Agenda[]            @relation("CreadorAgenda")
   slotsAsignados             AgendaSlot[]        @relation("AsignadorSlot")
-  agendaSlotsPaciente        AgendaSlot[]        @relation("PacienteSlot")
+  AgendaSlotLog              AgendaSlotLog[]
   Caja                       Caja[]              @relation("UsuarioCierreCaja")
   CajaUsuario                Caja[]              @relation("UsuarioCaja")
   CajaEgreso                 CajaEgreso[]
@@ -27,8 +27,7 @@ model User {
   HistoriaClinicaProfesional HistoriaClinica[]   @relation("ProfesionalHistoria")
   profesional                Profesional?
   recepcionesCreadas         Recepcion[]         @relation("CreadorRecepcion")
-
-  AgendaSlotLog AgendaSlotLog[]
+  agendaSlotsPaciente        AgendaSlot[]        @relation("PacienteSlot")
 }
 
 model Profesional {
@@ -62,12 +61,11 @@ model Paciente {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   doc_nro          String
+  AgendaSlot       AgendaSlot[]
   estudiosPaciente EstudiosPaciente[]
   recepciones      Recepcion[]
   seguros          SeguroPaciente[]
   VentaCarrito     VentaCarrito[]
-
-  AgendaSlot AgendaSlot[]
 }
 
 model Seguro {
@@ -195,80 +193,59 @@ model Agenda {
   updatedAt     DateTime     @updatedAt
   creadoPor     User         @relation("CreadorAgenda", fields: [creadoPorId], references: [id])
   profesional   Profesional  @relation(fields: [profesionalId], references: [id])
+  AgendaDia     AgendaDia[]
   slots         AgendaSlot[]
   recepciones   Recepcion[]
-
-  AgendaDia AgendaDia[]
 }
 
 model AgendaSlotLog {
-  id            String     @id @default(uuid())
-  agendaSlotId  String
-  estadoAnterior EstadoSlot
-  estadoNuevo   EstadoSlot
-  pacienteId    String?    // ID del paciente asociado al slot en ese momento
-  motivo        String?    // Motivo del cambio (obligatorio para CANCELADO/ELIMINADO)
-  modificadoPorId String   // Quién hizo el cambio
-  createdAt     DateTime   @default(now())
-  agendaSlot    AgendaSlot @relation(fields: [agendaSlotId], references: [id])
-  modificadoPor User       @relation(fields: [modificadoPorId], references: [id])
+  id              String     @id @default(uuid())
+  agendaSlotId    String
+  estadoAnterior  EstadoSlot
+  estadoNuevo     EstadoSlot
+  pacienteId      String?
+  motivo          String?
+  modificadoPorId String
+  createdAt       DateTime   @default(now())
+  agendaSlot      AgendaSlot @relation(fields: [agendaSlotId], references: [id])
+  modificadoPor   User       @relation(fields: [modificadoPorId], references: [id])
 }
 
 model AgendaSlot {
-  id            String         @id @default(uuid())
-  agendaId      String
-  horarioInicio DateTime
-  horarioFin    DateTime
-  estado        EstadoSlot     @default(DISPONIBLE)
-  pacienteId    String?
-  asignadoPorId String?
-  eliminado     Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  agenda        Agenda         @relation(fields: [agendaId], references: [id])
-  asignadoPor   User?          @relation("AsignadorSlot", fields: [asignadoPorId], references: [id])
-  paciente      Paciente?      @relation(fields: [pacienteId], references: [id])
-  AgendaDia     AgendaDia[]
-  logs          AgendaSlotLog[] // Relación con la tabla de auditoría
-  motivoConsulta String?    // Nuevo campo para almacenar el motivo de consulta
-  User User[] @relation("PacienteSlot")
-}
-
-enum EstadoSlot {
-  DISPONIBLE
-  OCUPADO
-  AGENDADO
-  BLOQUEADO
-  CANCELADO
-  ELIMINADO
+  id             String          @id @default(uuid())
+  agendaId       String
+  horarioInicio  DateTime
+  horarioFin     DateTime
+  estado         EstadoSlot      @default(DISPONIBLE)
+  pacienteId     String?
+  asignadoPorId  String?
+  eliminado      Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  motivoConsulta String?
+  agenda         Agenda          @relation(fields: [agendaId], references: [id])
+  asignadoPor    User?           @relation("AsignadorSlot", fields: [asignadoPorId], references: [id])
+  paciente       Paciente?       @relation(fields: [pacienteId], references: [id])
+  logs           AgendaSlotLog[]
+  AgendaDia      AgendaDia[]     @relation("AgendaDiaToAgendaSlot")
+  User           User[]          @relation("PacienteSlot")
 }
 
 model AgendaDia {
-  id         String   @id @default(uuid())
-  agendaId   String
-  diaSemana  DiaSemana
-  fechaInicio DateTime
-  fechaFin    DateTime
+  id                  String       @id @default(uuid())
+  agendaId            String
+  diaSemana           DiaSemana
+  fechaInicio         DateTime
+  fechaFin            DateTime
   horarioMananaInicio DateTime?
   horarioMananaFin    DateTime?
   horarioTardeInicio  DateTime?
   horarioTardeFin     DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  agenda     Agenda   @relation(fields: [agendaId], references: [id])
-  slots      AgendaSlot[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  agenda              Agenda       @relation(fields: [agendaId], references: [id])
+  slots               AgendaSlot[] @relation("AgendaDiaToAgendaSlot")
 }
-
-enum DiaSemana {
-  LUNES
-  MARTES
-  MIERCOLES
-  JUEVES
-  VIERNES
-  SABADO
-  DOMINGO
-}
-
 
 model Recepcion {
   id             String         @id @default(uuid())
@@ -412,22 +389,39 @@ model HistoriaClinica {
   profesional     User     @relation("ProfesionalHistoria", fields: [profesionalId], references: [id])
 }
 
+enum EstadoSlot {
+  DISPONIBLE
+  OCUPADO
+  AGENDADO
+  BLOQUEADO
+  CANCELADO
+  ELIMINADO
+}
+
+enum DiaSemana {
+  LUNES
+  MARTES
+  MIERCOLES
+  JUEVES
+  VIERNES
+  SABADO
+  DOMINGO
+}
+
 enum Role {
-  SUPER
   ADMIN
   MANAGER
   USER
   MEDICO
   ENFERMERO
   RECEPCIONISTA
+  SUPER
 }
 
 enum Sexo {
   HOMBRE
   MUJER
 }
-
- 
 
 enum MotivoConsulta {
   DOLOR_DE_GARGANTA

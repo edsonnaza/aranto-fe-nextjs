@@ -199,7 +199,9 @@ function generarSlotsParaRango(
 }
  
  
-  async function getSlotPatientDetails(slotId: string) {
+ 
+import { formatDate } from "@/lib/utils";
+ async function getSlotPatientDetails(slotId: string) {
   const slot = await prisma.agendaSlot.findUnique({
     where: { id: slotId },
     include: {
@@ -219,20 +221,20 @@ function generarSlotsParaRango(
     throw new Error("Paciente no encontrado en el slot");
   }
 
-  console.log("Datos del slot:", { slotId, motivoConsulta: slot.motivoConsulta });
+  console.log("Datos del turno:", { slotId, motivoConsulta: slot.motivoConsulta });
 
   return {
     nombres: slot.paciente.nombres,
     apellidos: slot.paciente.apellidos,
     contacto: slot.paciente.contacto,
     sexo: slot.paciente.sexo as "HOMBRE" | "MUJER",
-    fechaNacimiento: slot.paciente.fechaNacimiento.toISOString().split('T')[0].split('-').reverse().join('-'),
+    fechaNacimiento: formatDate(slot.paciente.fechaNacimiento),
     doc_nro: slot.paciente.doc_nro,
     motivoConsulta: slot.motivoConsulta || "",
   };
 }
 
-  async function registrarPacienteEnSlot(
+ async function registrarPacienteEnSlot(
   slotId: string,
   nombres: string,
   apellidos: string,
@@ -257,6 +259,7 @@ function generarSlotsParaRango(
     nuevoEstado,
   });
 
+  // Convertir fechaNacimiento de DD-MM-YYYY a un objeto Date
   const [day, month, year] = fechaNacimiento.split("-");
   const fechaNacimientoDate = new Date(`${year}-${month}-${day}`);
   if (isNaN(fechaNacimientoDate.getTime())) {
@@ -277,14 +280,29 @@ function generarSlotsParaRango(
     let pacienteId: string | null = slot.pacienteId;
 
     if (nuevoEstado === "DISPONIBLE" || nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO") {
-      pacienteId = null;
+      pacienteId = null; // Desconectar el paciente si el slot pasa a un estado que no requiere paciente
+    } else if (pacienteId) {
+      // Si ya existe un pacienteId, actualizar ese paciente sin importar los cambios en nombres/apellidos
+      console.log("Actualizando paciente existente con ID:", pacienteId);
+      const paciente = await tx.paciente.update({
+        where: { id: pacienteId },
+        data: {
+          nombres,
+          apellidos,
+          contacto,
+          sexo,
+          fechaNacimiento: fechaNacimientoDate,
+          doc_nro,
+        },
+      });
+      console.log("Paciente actualizado con éxito:", paciente);
     } else {
+      // Si no hay pacienteId, buscar o crear un nuevo paciente
       let paciente = await tx.paciente.findFirst({
         where: { nombres, apellidos, contacto },
       });
 
       if (!paciente) {
-        // Crear nuevo paciente si no existe
         console.log("Creando nuevo paciente con datos:", { nombres, apellidos, contacto, sexo, fechaNacimiento, doc_nro });
         paciente = await tx.paciente.create({
           data: {
@@ -300,14 +318,13 @@ function generarSlotsParaRango(
         });
         console.log("Paciente creado con éxito:", paciente);
       } else {
-        // Actualizar el paciente existente con los nuevos datos
-        console.log("Actualizando paciente existente con datos:", { nombres, apellidos, contacto, sexo, fechaNacimiento, doc_nro });
+        console.log("Actualizando paciente encontrado con datos:", { nombres, apellidos, contacto, sexo, fechaNacimiento, doc_nro });
         paciente = await tx.paciente.update({
           where: { id: paciente.id },
           data: {
             sexo,
             fechaNacimiento: fechaNacimientoDate,
-            doc_nro, // Actualizar doc_nro
+            doc_nro,
           },
         });
         console.log("Paciente actualizado con éxito:", paciente);
@@ -337,9 +354,7 @@ function generarSlotsParaRango(
     throw error;
   });
 }
-
  
-
   // Buscar pacientes
      async function buscarPacientesPorNombre(nombre: string) {
     if (!nombre || nombre.length < 2) {
