@@ -4,8 +4,10 @@ import AgendaTable from "@/components/agenda/AgendaTable";
 import Link from "next/link";
 import Button from "@/components/ui/button/Button";
 import { formatDate } from "@/lib/utils"
- 
+import { Suspense } from "react";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
+import SkeletonLoader from "@/components/ui/SkeletonLoader";
+
 export default async function AgendaPage() {
   // Obtener todas las agendas desde Prisma
   const agendas = await prisma.agenda.findMany({
@@ -30,12 +32,16 @@ export default async function AgendaPage() {
     <div className="grid grid-cols-12 gap-4 md:gap-6">
       <Link href="/dashboard/agenda/crear">
       <Button size="md"   className="w-44">
-                Crear Agenda 
-                <CalendarDateRangeIcon className="size-6"/>
+        Crear Agenda 
+        <CalendarDateRangeIcon className="size-6"/>
       </Button>
       </Link>
       <div className="col-span-12 space-y-6 xl:col-span-12">
-        <AgendaTable agendas={agendaData} />
+        <Suspense fallback={<SkeletonLoader />}> 
+         <AgendaTable agendas={agendaData}  isLoading = {false}/>
+        
+        </Suspense>
+  
       </div>
     </div>
   );

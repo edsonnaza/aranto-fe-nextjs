@@ -1,39 +1,32 @@
-'use client';
+"use client";
 import { useState } from "react";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import ComponentCard from "../common/ComponentCard";
 import { crearAgenda } from "@/lib/actions/agenda";
-import { useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { toast, Bounce } from "react-toastify";
 import LoadingButton from "../ui/button/LoadingButton";
 import Link from "next/link";
+import SkeletonLoader from "../ui/SkeletonLoader";
 
 const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: string; apellidos: string }[] }) => {
-   
-  //const { data: session } = useSession(); // Obtiene la sesión
-  
   const { data: session, status } = useSession();
   const creadoPorId = session?.user?.id;
-   
-  
-  const className="max-w-lg mx-auto p-6";
+
+  const className = "max-w-lg mx-auto p-6";
   const [profesional, setProfesional] = useState("");
   const [dias, setDias] = useState<string[]>([]);
   const [intervalo, setIntervalo] = useState(15);
   const [horarios, setHorarios] = useState<{ [key: string]: { manana?: string; tarde?: string } }>({});
   const [fechaFin, setFechaFin] = useState<Date | undefined>(undefined);
   const [fechaInicio, setFechaInicio] = useState<Date | undefined>(undefined);
-  //const [creadoPorId, setCreadoPorId] = useState<{id:string | undefined}>("");
   const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   const intervalosDisponibles = [5, 10, 15, 20, 30, 45, 60];
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
- //setCreadoPorId(session?.user.id);
-
-
- const resetForm = () => {
+  const resetForm = () => {
     setProfesional("");
     setDias([]);
     setIntervalo(15);
@@ -41,8 +34,9 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
     setFechaInicio(undefined);
     setFechaFin(undefined);
     setErrors([]);
+    setIsLoading(false); // Reiniciar isLoading al resetear el formulario
   };
- 
+
   const toggleDia = (dia: string) => {
     setDias((prev) => (prev.includes(dia) ? prev.filter((d) => d !== dia) : [...prev, dia]));
   };
@@ -59,8 +53,11 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
     return startTime < endTime; // Start Time debe ser menor a End Time
   };
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Iniciando handleSubmit, isLoading:", isLoading); // Depuración
+    setIsLoading(true); // Activar el spinner
+
     const newErrors: string[] = [];
 
     if (status === "loading") {
@@ -74,11 +71,12 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
 
     if (newErrors.length > 0) {
       setErrors(newErrors);
+      console.log("Errores encontrados, isLoading:", isLoading); // Depuración
+      setIsLoading(false); // Desactivar isLoading si hay errores
       return;
     }
 
     setErrors([]);
-    setIsLoading(true); // Activar el spinner
     try {
       const transformedHorarios = Object.entries(horarios).reduce(
         (acc, [dia, { manana, tarde }]) => {
@@ -97,66 +95,61 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
       );
 
       if (fechaInicio && fechaFin) {
+        console.log("Llamando a crearAgenda con datos:", { profesional, fechaInicio, fechaFin, intervalo, transformedHorarios, creadoPorId });
         await crearAgenda(profesional, fechaInicio, fechaFin, intervalo, transformedHorarios, creadoPorId!);
         toast.success(
-            <div>
-              Agenda creada con éxito!{" "}
-              <Link href="/dashboard/agenda" className="text-blue-500 underline">
-                Ver agendas
-              </Link>
-            </div>,
-            {
-              transition: Bounce,
-            }
-          );
-          resetForm(); // Limpiar el formulario
-        //   toast.success("Agenda creada con éxito!", {
-        //     transition: Bounce, // Solo especificamos lo único
-        //   });
-    
-    } else {
+          <div>
+            Agenda creada con éxito!{" "}
+            <Link href="/dashboard/agenda" className="text-blue-500 underline">
+              Ver agendas
+            </Link>
+          </div>,
+          {
+            transition: Bounce,
+          }
+        );
+        resetForm(); // Limpiar el formulario
+      } else {
         setErrors(["Las fechas de inicio y fin son requeridas"]);
       }
-      
-      console.log("Agenda creada con éxito");
-
-       
     } catch (error) {
-        const errorMessage = (error as Error).message || "Error al crear la agenda";
-        setErrors([errorMessage]);
-        toast.error(errorMessage, {
-          transition: Bounce,
-        });
-    }finally {
-        setIsLoading(false); // Desactivar el spinner
-      }
+      const errorMessage = (error as Error).message || "Error al crear la agenda";
+      setErrors([errorMessage]);
+      toast.error(errorMessage, {
+        transition: Bounce,
+      });
+      console.error("Error en crearAgenda:", error);
+    } finally {
+      console.log("Finalizando handleSubmit, isLoading:", isLoading); // Depuración
+      setIsLoading(false); // Desactivar el spinner siempre
+    }
   };
 
+  if (isLoading) {
+    return <SkeletonLoader type="form" fields={6} />;
+  }
+
   return (
-    
-      
-      <ComponentCard className={className} title="Crear Nueva Agenda" >
+    <ComponentCard className={className} title="Crear Nueva Agenda">
       <form onSubmit={handleSubmit}>
-      {errors.length > 0 && (
-        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-          <ul>
-            {errors.map((error, index) => (
-              <li key={index}>{error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {errors.length > 0 && (
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+            <ul>
+              {errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <label className="block mb-2">
           Profesional:
           <select value={profesional} onChange={(e) => setProfesional(e.target.value)} className="w-full p-2 border rounded">
             <option value="">Seleccione un profesional</option>
-            {
-                profesionales.map((item:{id:string;nombres:string; apellidos:string})=>(
-                    <option key={item.id} value={item.id}>{item.nombres}{" "}{item.apellidos}</option>
-                ))
-            }
-           
-            
+            {profesionales.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.nombres} {item.apellidos}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -174,11 +167,13 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           Intervalo de atención (min):
           <select value={intervalo} onChange={(e) => setIntervalo(Number(e.target.value))} className="w-full p-2 border rounded">
             {intervalosDisponibles.map((int) => (
-              <option key={int} value={int}>{int} minutos</option>
+              <option key={int} value={int}>
+                {int} minutos
+              </option>
             ))}
           </select>
         </label>
-        
+
         <div className="mb-4">
           <h3 className="font-semibold mb-2">Fecha de Inicio:</h3>
           <Flatpickr
@@ -202,10 +197,8 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
         <div className="mb-4">
           <h3 className="font-semibold mb-2">Horarios disponibles:</h3>
           {dias.map((dia) => (
-            <div key={dia} className="mb-3 ring-1 ring-blue-500 p-4 rounded-sm ">
-              <h4 className="font-bold mb-2 ">{dia}</h4>
-
-              {/* Mañana */}
+            <div key={dia} className="mb-3 ring-1 ring-blue-500 p-4 rounded-sm">
+              <h4 className="font-bold mb-2">{dia}</h4>
               <label className="block">
                 Mañana:
                 <div className="flex gap-2">
@@ -246,8 +239,6 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                   />
                 </div>
               </label>
-
-              {/* Tarde */}
               <label className="block mt-2">
                 Tarde:
                 <div className="flex gap-2">
@@ -296,16 +287,12 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           type="submit"
           isLoading={isLoading}
           disabled={status === "loading"}
-          className="mt-3" // Clase adicional para margen
+          className="mt-3"
         >
           Guardar Agenda
         </LoadingButton>
-
-
       </form>
-     
-      </ComponentCard>
-    
+    </ComponentCard>
   );
 };
 

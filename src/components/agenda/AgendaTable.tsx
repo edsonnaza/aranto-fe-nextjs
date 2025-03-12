@@ -12,6 +12,8 @@ import {
 import Badge from "../ui/badge/Badge";
 import Link from "next/link";
 import { Eye } from "lucide-react";
+import SkeletonLoader from "../ui/SkeletonLoader";
+ 
 
 interface Agenda {
   id: string;
@@ -25,9 +27,10 @@ interface Agenda {
 
 interface AgendaTableProps {
   agendas: Agenda[];
+  isLoading : boolean;
 }
 
-export default function AgendaTable({ agendas }: AgendaTableProps) {
+export default function AgendaTable({ agendas, isLoading=false}: AgendaTableProps) {
   // Función para calcular el porcentaje de ocupación y determinar el color de la barra
   const getProgressBarProps = (slotsDisponibles: number, slotsTotales: number) => {
     const turnosOcupados = slotsTotales - slotsDisponibles;
@@ -42,6 +45,10 @@ export default function AgendaTable({ agendas }: AgendaTableProps) {
 
     return { porcentajeOcupado, colorClass };
   };
+
+  if (isLoading) {
+    return <SkeletonLoader type="table" rows={5} columns={5} />;
+  }
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
