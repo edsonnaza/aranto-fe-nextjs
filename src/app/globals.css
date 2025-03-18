@@ -148,6 +148,14 @@
   }
 }
 
+.fc-event-title {
+  white-space: nowrap;       /* Evita que el texto se divida en varias líneas */
+  overflow: hidden;          /* Oculta el texto que sobrepasa el ancho del contenedor */
+  text-overflow: ellipsis;   /* Agrega los "..." cuando el texto es demasiado largo */
+  max-width: 100%;           /* Asegura que el texto no crezca fuera del evento */
+  display: block;            /* Asegura que el estilo se aplique correctamente */
+}
+
 /* third-party libraries CSS */
 .apexcharts-legend-text {
   @apply !text-gray-700 dark:!text-gray-400;
@@ -280,6 +288,11 @@
 }
 .event-fc-color .fc-event-title {
   @apply p-0 text-sm font-normal text-gray-700;
+  white-space: nowrap;       /* Evita que el texto se divida en varias líneas */
+  overflow: hidden;          /* Oculta el texto que sobrepasa el ancho del contenedor */
+  text-overflow: ellipsis;   /* Agrega los "..." cuando el texto es demasiado largo */
+  max-width: 100%;           /* Asegura que el texto no crezca fuera del evento */
+  display: block; 
 }
 .fc-daygrid-event-dot {
   @apply w-1 h-5 ml-0 mr-3 border-none rounded;

@@ -15,7 +15,7 @@ import { formatDate } from "@/lib/utils";
 import "moment/locale/es"; // Importa el idioma español
 import "moment-timezone"; // Importa la zona horaria
 import moment from "moment";
-
+import classNames from "classnames";
 // Configurar moment en español
 moment.locale("es");
  
@@ -227,6 +227,15 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     }
   };
  
+  const colorMap: { [key: string]: string } = {
+    DISPONIBLE: "bg-green-200 text-black",
+    OCUPADO: "bg-red-100 text-black text-size-sm",
+    AGENDADO: "bg-blue-200 text-white",
+    BLOQUEADO: "bg-yellow-200 text-black",
+    CANCELADO: "bg-gray-200 text-black",
+    ELIMINADO: "bg-gray-300 text-black",
+  };
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
@@ -236,6 +245,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           slotDuration="00:30:00"
           slotLabelInterval="00:30"
           timeZone="PY"
+          droppable={true}
+          dropAccept='.cool-event'
           ref={calendarRef}
           initialView="timeGridDay"
           headerToolbar={{
@@ -250,6 +261,9 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           allDaySlot={false}
           locale={esLocale}
           dayMaxEvents={3} // Muestra hasta 3 eventos antes de mostrar "+X más"
+          slotEventOverlap={false}
+
+
           buttonText={{
             today: "Hoy",
             month: "Mes",
@@ -413,14 +427,16 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
               <select
                 value={nuevoEstado}
                 onChange={(e) => setNuevoEstado(e.target.value as EstadoSlot)}
-                className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                className={classNames(
+                  "dark:bg-dark-900 h-11 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-none focus:ring focus:ring-brand-500/10 dark:border-gray-700",
+                  colorMap[nuevoEstado] || "bg-transparent text-gray-800"
+                )}
               >
-                <option value="DISPONIBLE">Disponible</option>
-                <option value="OCUPADO">Ocupado</option>
-                <option value="AGENDADO">Agendado</option>
-                <option value="BLOQUEADO">Bloqueado</option>
-                <option value="CANCELADO">Cancelado</option>
-                <option value="ELIMINADO">Eliminado</option>
+                {Object.keys(colorMap).map((estado) => (
+                  <option key={estado} value={estado}>
+                    {estado}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -452,7 +468,7 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 
   const colorMap: { [key: string]: string } = {
     DISPONIBLE: "bg-green-200 text-black",
-    OCUPADO: "bg-red-200 text-white",
+    OCUPADO: "bg-red-100 text-black text-sm",
     AGENDADO: "bg-blue-200 text-white",
     BLOQUEADO: "bg-yellow-200 text-black",
     CANCELADO: "bg-gray-200 text-black",
@@ -460,14 +476,21 @@ const renderEventContent = (eventInfo: EventContentArg) => {
   };
 
   const eventClass = colorMap[calendarType] || "bg-gray-200 text-black";
+  //const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  const startTime = moment(eventInfo.event.startStr);//.tz(userTimeZone);
+  const isMonthView = eventInfo.view.type === "dayGridMonth";
+  //title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${startTime.format("dddd D [de] MMMM [a las] HH:mm")}`}
+  const truncateText = (text: string, maxLength: number, isMonthView: boolean) => {
+    if (!isMonthView) return text; // Si NO es la vista de mes, mostrar todo el texto
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
   return (
     <div
-      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(eventInfo.event.endStr).tz("America/Asuncion")
-    .format("dddd D [de] MMMM [a las] HH:mm")}}`}
-      className={`p-2 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
+      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
+      className={`p-1 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
     >
-      <strong>{eventInfo.timeText}:</strong> {eventInfo.event.title}
+       {eventInfo.timeText}: <span className="rounded-s text-opacity-35"> {truncateText(eventInfo.event.title, 15, isMonthView)}</span> 
     </div>
   );
 };

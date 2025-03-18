@@ -31,6 +31,7 @@
     "apexcharts": "^4.5.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
+    "classnames": "^2.5.1",
     "date-fns": "^4.1.0",
     "flatpickr": "^4.6.13",
     "jsonwebtoken": "^9.0.2",
@@ -55,6 +56,7 @@
   "devDependencies": {
     "@heroicons/react": "^2.2.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/classnames": "^2.3.4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.23",
     "@types/react": "^18.3.18",
