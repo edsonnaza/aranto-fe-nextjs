@@ -256,7 +256,7 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           }}
           events={events}
           eventContent={renderEventContent}
-          slotMinTime="07:00:00"
+          slotMinTime="05:00:00"
           slotMaxTime="23:00:00"
           allDaySlot={false}
           locale={esLocale}

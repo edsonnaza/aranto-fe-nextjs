@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Pacientes", path: "/dashboard/pacientes", pro: false },
       { name: "Admitidos", path: "/dashboard/invoices", pro: false },
+      { name: "Turnos", path: "/dashboard/turnos", pro: false },
     ],
   },
 ];
