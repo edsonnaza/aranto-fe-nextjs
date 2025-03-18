@@ -260,9 +260,23 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           slotMaxTime="23:00:00"
           allDaySlot={false}
           locale={esLocale}
+          eventBackgroundColor="transparent"
+          eventBorderColor="black"
+          eventTextColor="black"
+          eventDisplay="block"
           dayMaxEvents={3} // Muestra hasta 3 eventos antes de mostrar "+X más"
           slotEventOverlap={false}
-
+          eventDidMount={(info) => {
+            // Detecta si el evento está dentro del modal emergente (popover)
+            const isPopoverEvent = info.el.closest(".fc-popover");
+            if (isPopoverEvent) {
+              // Si está en el modal, mostramos el texto completo
+              const spanElement = info.el.querySelector("span");
+              if (spanElement) {
+                spanElement.textContent = info.event.title;
+              }
+            }
+          }}
 
           buttonText={{
             today: "Hoy",
@@ -480,17 +494,20 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 
   const startTime = moment(eventInfo.event.startStr);//.tz(userTimeZone);
   const isMonthView = eventInfo.view.type === "dayGridMonth";
+  const isPopover = eventInfo.event.extendedProps.isPopover || eventInfo.isMirror; // Detecta si está en el modal
+
   //title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${startTime.format("dddd D [de] MMMM [a las] HH:mm")}`}
-  const truncateText = (text: string, maxLength: number, isMonthView: boolean) => {
-    if (!isMonthView) return text; // Si NO es la vista de mes, mostrar todo el texto
+  const truncateText = (text: string, maxLength: number, isMonthView: boolean, isPopover: boolean) => {
+    if (!isMonthView || isPopover) return text; // No truncar si no es la vista de mes o si está en el modal
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
+  
   return (
     <div
       title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
       className={`p-1 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
     >
-       {eventInfo.timeText}: <span className="rounded-s text-opacity-35"> {truncateText(eventInfo.event.title, 15, isMonthView)}</span> 
+       {eventInfo.timeText}: <span className="rounded-s text-opacity-35"> {truncateText(eventInfo.event.title, 15, isMonthView, isPopover)}</span> 
     </div>
   );
 };
