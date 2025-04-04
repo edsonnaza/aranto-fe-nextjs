@@ -47,7 +47,7 @@ export default function AgendaTable({ agendas, isLoading=false}: AgendaTableProp
   };
 
   if (isLoading) {
-    return <SkeletonLoader type="table" rows={5} columns={5} />;
+    return <SkeletonLoader type="table" rows={5} columns={6} />;
   }
 
   return (

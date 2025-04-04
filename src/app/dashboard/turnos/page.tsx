@@ -18,6 +18,7 @@ export default async function AgendaPage() {
 //     },
 //   });
   const events = await getPacientesConTurnos();
+  console.log({events});
   // Transformar los datos para AgendaTable
 //   const agendaData = agendas.map((agenda) => ({
 //     id: agenda.id,

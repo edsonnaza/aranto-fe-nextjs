@@ -12,14 +12,15 @@ interface SkeletonLoaderProps {
 }
 
 const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
-  type = "table",
-  rows = 5,
-  columns = 5,
+  type,
+  rows,
+  columns,
   fields = 6,
   height = "500px",
   width = "100%",
   className = "",
 }) => {
+  console.log("SkeletonLoader props:", { type, columns, fields });
   const baseClass = `rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] animate-pulse ${className}`;
 
   const renderTableSkeleton = () => (
@@ -56,7 +57,7 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       <div className="custom-calendar">
         <div className="h-[500px] bg-gray-300 dark:bg-gray-700 rounded-lg mb-4" style={{ height, width }}></div>
         <div className="space-y-4">
-          {[...Array(3)].map((_, index) => (
+          {[...Array(fields)].map((_, index) => ( // Usar 'fields' para el número de eventos
             <div key={index} className="flex items-center space-x-4">
               <div className="h-4 w-4 bg-gray-300 dark:bg-gray-700 rounded"></div>
               <div className="h-4 w-1/4 bg-gray-300 dark:bg-gray-700 rounded"></div>
@@ -85,14 +86,16 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       </div>
     </div>
   );
-
+console.log("Switch type value:", type);
   switch (type) {
     case "calendar":
       return renderCalendarSkeleton();
     case "form":
       return renderFormSkeleton();
     case "table":
+      return renderTableSkeleton();
     default:
+      console.warn("Tipo no reconocido, usando tabla por defecto:", type);
       return renderTableSkeleton();
   }
 };

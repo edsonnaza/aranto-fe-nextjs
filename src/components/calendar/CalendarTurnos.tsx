@@ -256,7 +256,7 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           }}
           events={events}
           eventContent={renderEventContent}
-          slotMinTime="05:00:00"
+          slotMinTime="07:00:00"
           slotMaxTime="23:00:00"
           allDaySlot={false}
           locale={esLocale}
@@ -504,10 +504,10 @@ const renderEventContent = (eventInfo: EventContentArg) => {
   
   return (
     <div
-      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
+      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |-  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
       className={`p-1 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
     >
-       {eventInfo.timeText}: <span className="rounded-s text-opacity-35"> {truncateText(eventInfo.event.title, 15, isMonthView, isPopover)}</span> 
+       {eventInfo.timeText}: <span className="rounded-s text-opacity-35">{truncateText(eventInfo.event.title+" | "+eventInfo.event.extendedProps.profesionalNombre, 15, isMonthView, isPopover)}</span> 
     </div>
   );
 };

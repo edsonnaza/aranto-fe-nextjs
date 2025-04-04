@@ -16,6 +16,9 @@ import "moment/locale/es"; // Importa el idioma español
 import "moment-timezone"; // Importa la zona horaria
 import moment from "moment";
 import classNames from "classnames";
+
+import { FaLock } from "react-icons/fa"; // Importa el icono de bloqueo
+ 
 // Configurar moment en español
 moment.locale("es");
  
@@ -235,6 +238,8 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     CANCELADO: "bg-gray-200 text-black",
     ELIMINADO: "bg-gray-300 text-black",
   };
+  
+
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
@@ -501,13 +506,30 @@ const renderEventContent = (eventInfo: EventContentArg) => {
     if (!isMonthView || isPopover) return text; // No truncar si no es la vista de mes o si está en el modal
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
+
+  const handleLockClick = (eventInfo: EventContentArg) => {
+    toast.info(`Bloqueando ${eventInfo.event.title}...`);
+    // Aquí puedes agregar la lógica para bloquear la agenda
+  };
   
   return (
     <div
       title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
       className={`p-1 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
     >
-       {eventInfo.timeText}: <span className="rounded-s text-opacity-35"> {truncateText(eventInfo.event.title, 15, isMonthView, isPopover)}</span> 
+
+      <span className="rounded-s text-opacity-35">
+        {truncateText(eventInfo.event.title, 15, isMonthView, isPopover)}
+      </span>
+      
+      {/* Ícono de bloqueo */}
+      <span className="rounded-s text-opacity-35">
+
+      <FaLock
+        className="ml-auto text-gray-600 cursor-pointer hover:text-gray-800"
+        onClick={(e) => handleLockClick(eventInfo, e)}
+        />
+      </span>
     </div>
   );
 };

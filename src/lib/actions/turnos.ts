@@ -16,11 +16,13 @@ export async function getPacientesConTurnos() {
     },
     include: {
       paciente: true, // Datos del paciente
-      agenda: {
-        include: {
-          profesional: { select: { nombres: true, apellidos: true } }, // Nombre del profesional
+        agenda: {
+            select: {
+            fechaInicio: true,
+            fechaFin: true,
+            profesional: { select: { nombres: true, apellidos: true } }, // Datos del profesional
+            },
         },
-      },
     },
   });
 
@@ -31,10 +33,10 @@ export async function getPacientesConTurnos() {
     end: slot.horarioFin,
     title: slot.paciente 
       ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin motivo"})`
-      : "Paciente no disponible",
+      : "Turno disponible",
     extendedProps: {
       calendar: slot.estado, // Estado del slot (OCUPADO, AGENDADO)
-      profesionalnombre: `${slot.agenda.profesional.nombres} ${slot.agenda.profesional.apellidos}`, // Nombre del profesional
+      profesionalNombre: `${slot.agenda.profesional.nombres} ${slot.agenda.profesional.apellidos}`, // Nombre del profesional
     },
   }));
 

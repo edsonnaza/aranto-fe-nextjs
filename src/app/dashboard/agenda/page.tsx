@@ -37,11 +37,9 @@ export default async function AgendaPage() {
       </Button>
       </Link>
       <div className="col-span-12 space-y-6 xl:col-span-12">
-        <Suspense fallback={<SkeletonLoader />}> 
+        <Suspense fallback={<SkeletonLoader type="table" columns={6} rows={5} />}> 
          <AgendaTable agendas={agendaData}  isLoading = {false}/>
-        
         </Suspense>
-  
       </div>
     </div>
   );
