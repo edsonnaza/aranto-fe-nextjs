@@ -53,51 +53,80 @@ const normalizeDayName = (day: string): string => {
     return dayMap[normalized] || normalized;
   };
 
-// Crear la agenda y sus días, ajustado al modelo AgendaDia
+// 👉 Función auxiliar para combinar fecha y hora en zona local
+function combinarFechaYHoraLocal(fecha: Date, hora: string): Date {
+  const [h, m] = hora.split(":").map(Number);
+
+  // Crear fecha UTC explícita (sin aplicar timezone local del sistema)
+  const utcDate = new Date(Date.UTC(
+    fecha.getFullYear(),
+    fecha.getMonth(),
+    fecha.getDate(),
+    h,
+    m,
+    0,
+    0
+  ));
+
+  return utcDate;
+}
+
+
+// 🧠 Crear la agenda y sus días
 async function crearAgenda(
-    profesionalId: string,
-    fechaInicio: Date,
-    fechaFin: Date,
-    intervalo: number,
-    dias: Record<string, { horaInicio: string; horaFin: string }[]>,
-    creadoPorId: string
-  ) {
-    await validarDiasDisponibles(profesionalId, Object.keys(dias) as DiaSemana[]);
-  
-    const agenda = await prisma.agenda.create({
+  profesionalId: string,
+  fechaInicio: Date,
+  fechaFin: Date,
+  intervalo: number,
+  dias: Record<string, { horaInicio: string; horaFin: string }[]>,
+  creadoPorId: string
+) {
+  await validarDiasDisponibles(profesionalId, Object.keys(dias) as DiaSemana[]);
+
+  const agenda = await prisma.agenda.create({
+    data: {
+      profesionalId,
+      fechaInicio,
+      fechaFin,
+      duracionSlot: intervalo,
+      creadoPorId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  for (const [dia, horarios] of Object.entries(dias)) {
+    const manana = horarios[0];
+    const tarde = horarios[1];
+    console.log({manana, tarde, fechaInicio});
+    console.log("Creando agenda para el día:", dia, "con horarios:", horarios);
+    await prisma.agendaDia.create({
       data: {
-        profesionalId,
+        agendaId: agenda.id,
+        diaSemana: normalizeDayName(dia) as DiaSemana,
         fechaInicio,
         fechaFin,
-        duracionSlot: intervalo,
-        creadoPorId,
-      },
-      select: {
-        id: true,
+        horarioMananaInicio: manana
+          ? combinarFechaYHoraLocal(fechaInicio, manana.horaInicio).toISOString()
+          : null,
+        horarioMananaFin: manana
+          ? combinarFechaYHoraLocal(fechaInicio, manana.horaFin).toISOString()
+          : null,
+        horarioTardeInicio: tarde
+          ? combinarFechaYHoraLocal(fechaInicio, tarde.horaInicio).toISOString()
+          : null,
+        horarioTardeFin: tarde
+          ? combinarFechaYHoraLocal(fechaInicio, tarde.horaFin).toISOString()
+          : null,
       },
     });
-  
-    for (const [dia, horarios] of Object.entries(dias)) {
-      const manana = horarios[0];
-      const tarde = horarios[1];
-  
-      await prisma.agendaDia.create({
-        data: {
-          agendaId: agenda.id,
-          diaSemana: normalizeDayName(dia) as DiaSemana,
-          fechaInicio,
-          fechaFin,
-          horarioMananaInicio: manana ? new Date(`${fechaInicio.toISOString().split("T")[0]}T${manana.horaInicio}:00`) : null,
-          horarioMananaFin: manana ? new Date(`${fechaInicio.toISOString().split("T")[0]}T${manana.horaFin}:00`) : null,
-          horarioTardeInicio: tarde ? new Date(`${fechaInicio.toISOString().split("T")[0]}T${tarde.horaInicio}:00`) : null,
-          horarioTardeFin: tarde ? new Date(`${fechaInicio.toISOString().split("T")[0]}T${tarde.horaFin}:00`) : null,
-        },
-      });
-    }
-  
-    await generarSlots(agenda.id);
-    return agenda;
   }
+
+  await generarSlots(agenda.id);
+  return agenda;
+}
+
 
 // Generar los slots de la agenda basados en los horarios de mañana y tarde
 async function generarSlots(agendaId: string) {

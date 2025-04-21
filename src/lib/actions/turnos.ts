@@ -42,3 +42,46 @@ export async function getPacientesConTurnos() {
 
   return events;
 }
+
+import { startOfDay, endOfDay } from "date-fns";
+
+export async function getTurnosDelDia() {
+  const now = new Date();
+  const start = startOfDay(now);
+  const end = endOfDay(now);
+
+  const slots = await prisma.agendaSlot.findMany({
+    where: {
+      estado: { in: ["OCUPADO", "AGENDADO", "DISPONIBLE"] },
+      horarioInicio: { gte: start, lte: end },
+    },
+    include: {
+      paciente: true,
+      agenda: {
+        select: {
+          fechaInicio: true,
+          fechaFin: true,
+          profesional: { select: { nombres: true, apellidos: true } },
+        },
+      },
+    },
+    orderBy: {
+      horarioInicio: "asc", // ✅ Ordenar por hora
+    },
+  });
+
+  const events = slots.map((slot) => ({
+    id: slot.id,
+    start: slot.horarioInicio,
+    end: slot.horarioFin,
+    title: slot.paciente
+      ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin motivo"})`
+      : "Turno disponible",
+    extendedProps: {
+      calendar: slot.estado,
+      profesionalNombre: `${slot.agenda.profesional.nombres} ${slot.agenda.profesional.apellidos}`,
+    },
+  }));
+
+  return events;
+}

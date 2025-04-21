@@ -7,8 +7,9 @@ import Button from "@/components/ui/button/Button";
 import { Suspense } from "react";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
-import CalendarTurnos from "@/components/calendar/CalendarTurnos";
-import { getPacientesConTurnos } from "@/lib/actions/turnos";
+//import CalendarTurnos from "@/components/calendar/CalendarTurnos";
+import { getTurnosDelDia } from "@/lib/actions/turnos";
+import AgendaPorProfesional from "@/components/agenda/AgendaPorProfesional";
 export default async function AgendaPage() {
   // Obtener todas las agendas desde Prisma
 //   const agendas = await prisma.agenda.findMany({
@@ -17,7 +18,7 @@ export default async function AgendaPage() {
 //       slots: { select: { estado: true } }, // Slots para contar disponibles
 //     },
 //   });
-  const events = await getPacientesConTurnos();
+  const events = await getTurnosDelDia();
   console.log({events});
   // Transformar los datos para AgendaTable
 //   const agendaData = agendas.map((agenda) => ({
@@ -42,7 +43,7 @@ export default async function AgendaPage() {
       </Link>
       <div className="col-span-12 space-y-6 xl:col-span-12">
       <Suspense fallback={<SkeletonLoader />}>
-        <CalendarTurnos initialEvents={events} />
+        <AgendaPorProfesional events={events} />
       </Suspense>
   
       </div>

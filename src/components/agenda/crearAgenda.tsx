@@ -101,7 +101,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           <div>
             Agenda creada con éxito!{" "}
             <Link href="/dashboard/agenda" className="text-blue-500 underline">
-              Ver agendas
+              Ver agendas  {transformedHorarios? JSON.stringify(transformedHorarios) : ""}
             </Link>
           </div>,
           {
@@ -124,6 +124,16 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
       setIsLoading(false); // Desactivar el spinner siempre
     }
   };
+
+  function convertToDate(timeStr: string) {
+    const [hours, minutes] = timeStr.split(":");
+    const now = new Date();
+    now.setHours(parseInt(hours));
+    now.setMinutes(parseInt(minutes));
+    now.setSeconds(0);
+    return now;
+  }
+  
 
   if (isLoading) {
     return <SkeletonLoader type="form" fields={6} />;
@@ -179,7 +189,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           <Flatpickr
             value={fechaInicio}
             onChange={(date) => setFechaInicio(date[0])}
-            options={{ dateFormat: "Y-m-d" }}
+            options={{ dateFormat: "Y-m-d", minDate: fechaInicio || "today" }}
             className="border rounded-lg p-2 w-full"
           />
         </div>
@@ -189,7 +199,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           <Flatpickr
             value={fechaFin}
             onChange={(date) => setFechaFin(date[0])}
-            options={{ dateFormat: "Y-m-d" }}
+            options={{ dateFormat: "Y-m-d", minDate: fechaInicio || "today" }}
             className="border rounded-lg p-2 w-full"
           />
         </div>
@@ -200,7 +210,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
             <div key={dia} className="mb-3 ring-1 ring-blue-500 p-4 rounded-sm">
               <h4 className="font-bold mb-2">{dia}</h4>
               <label className="block">
-                Mañana:
+                Mañana Hora Inicio/Fin: 
                 <div className="flex gap-2">
                   <Flatpickr
                     value={horarios[dia]?.manana?.split("-")[0] || ""}
@@ -215,11 +225,14 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                       enableTime: true,
                       noCalendar: true,
                       dateFormat: "H:i",
+                      defaultHour: 8,
                       time_24hr: true,
-                    }}
+                      }}
+                  
                     className="border rounded-lg p-2 w-full"
                   />
                   <span>-</span>
+                
                   <Flatpickr
                     value={horarios[dia]?.manana?.split("-")[1] || ""}
                     onChange={(date) => {
@@ -232,7 +245,9 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                     options={{
                       enableTime: true,
                       noCalendar: true,
+                      minDate: fechaInicio || "today",
                       dateFormat: "H:i",
+                      defaultHour: 12,
                       time_24hr: true,
                     }}
                     className="border rounded-lg p-2 w-full"
@@ -240,7 +255,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                 </div>
               </label>
               <label className="block mt-2">
-                Tarde:
+                Tarde Hora Inicio/Fin:
                 <div className="flex gap-2">
                   <Flatpickr
                     value={horarios[dia]?.tarde?.split("-")[0] || ""}
@@ -255,6 +270,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                       enableTime: true,
                       noCalendar: true,
                       dateFormat: "H:i",
+                      defaultHour: 14,
                       time_24hr: true,
                     }}
                     className="border rounded-lg p-2 w-full"
@@ -273,6 +289,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
                       enableTime: true,
                       noCalendar: true,
                       dateFormat: "H:i",
+                      defaultHour: 18,
                       time_24hr: true,
                     }}
                     className="border rounded-lg p-2 w-full"
