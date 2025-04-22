@@ -8,6 +8,7 @@ interface Event {
   id: string;
   title?: string;
   start?: string | Date;
+  contacto?: string;
   extendedProps: {
     profesionalNombre: string;
     profesional?: string;
@@ -42,14 +43,14 @@ const AgendaPorProfesional: React.FC<AgendaPorProfesionalProps> = ({ events }) =
   
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6 p-4 lg:grid-cols-6  ">
       
       {Object.entries(eventosPorProfesional).map(([profesional, eventos]) => (
-        <div key={profesional} className="rounded-xl border border-gray-300 shadow-md p-4 bg-white">
+        <div key={profesional} className=" rounded-xl border border-gray-300 shadow-md p-4 bg-white">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             {profesional}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2">
             {eventos.map((evento) => (
               <div
                 key={evento.id}
@@ -77,6 +78,9 @@ const AgendaPorProfesional: React.FC<AgendaPorProfesionalProps> = ({ events }) =
                   })}`
                 : "Sin horario"}
 
+                </p>
+                <p className="text-gray-500">
+                {evento.contacto &&  "Contacto:" + evento.contacto || ""} 
                 </p>
                 <p className="text-gray-500">
                   Estado: {evento.extendedProps.calendar}

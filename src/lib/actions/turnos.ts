@@ -77,8 +77,10 @@ export async function getTurnosDelDia() {
     title: slot.paciente
       ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin motivo"})`
       : "Turno disponible",
+      contacto:slot.paciente?.contacto,
     extendedProps: {
       calendar: slot.estado,
+      
       profesionalNombre: `${slot.agenda.profesional.nombres} ${slot.agenda.profesional.apellidos}`,
     },
   }));

@@ -527,7 +527,7 @@ const renderEventContent = (eventInfo: EventContentArg) => {
 
       <FaLock
         className="ml-auto text-gray-600 cursor-pointer hover:text-gray-800"
-        onClick={(e) => handleLockClick(eventInfo, e)}
+        onClick={() => handleLockClick(eventInfo)}
         />
       </span>
     </div>

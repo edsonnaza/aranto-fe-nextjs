@@ -125,16 +125,6 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
     }
   };
 
-  function convertToDate(timeStr: string) {
-    const [hours, minutes] = timeStr.split(":");
-    const now = new Date();
-    now.setHours(parseInt(hours));
-    now.setMinutes(parseInt(minutes));
-    now.setSeconds(0);
-    return now;
-  }
-  
-
   if (isLoading) {
     return <SkeletonLoader type="form" fields={6} />;
   }
