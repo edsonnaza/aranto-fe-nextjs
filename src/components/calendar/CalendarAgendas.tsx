@@ -22,16 +22,13 @@ import { FaLock } from "react-icons/fa"; // Importa el icono de bloqueo
 // Configurar moment en español
 moment.locale("es");
  
-
- 
-
 interface CalendarEvent extends EventInput {
   id: string;
   extendedProps: {
+    duracionSlot: string;
     calendar: "DISPONIBLE" | "OCUPADO" | "AGENDADO" | "BLOQUEADO" | "CANCELADO" | "ELIMINADO";
   };
 }
-
 interface PacienteSuggestion {
   id: string;
   nombres: string;
@@ -205,19 +202,22 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
 
       console.log("Updated slot returned:", updatedSlot);
       setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === updatedSlot.id
-            ? {
-                ...event,
-                title:
-                  nuevoEstado === "DISPONIBLE" || nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"
-                    ? "Disponible"
-                    : `${formData.nombres} ${formData.apellidos} (${formData.motivoConsulta})`,
-                extendedProps: { calendar: nuevoEstado },
-              }
-            : event
-        )
-      );
+              prevEvents.map((event) =>
+                event.id === updatedSlot.id
+                  ? {
+                      ...event,
+                      title:
+                        nuevoEstado === "DISPONIBLE" || nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"
+                          ? "Disponible"
+                          : `${formData.nombres} ${formData.apellidos} (${formData.motivoConsulta})`,
+                      extendedProps: {
+                        ...event.extendedProps,
+                        calendar: nuevoEstado,
+                      },
+                    }
+                  : event
+              )
+            );
 
       toast.success("Turno actualizado con éxito");
       closeModal();
@@ -239,16 +239,22 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     ELIMINADO: "bg-gray-300 text-black",
   };
   
-
-
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
         <FullCalendar
           eventOverlap={false}
           plugins={[dayGridPlugin, timeGridPlugin]}
-          slotDuration="00:30:00"
-          slotLabelInterval="00:30"
+          slotDuration={
+            initialEvents.length > 0
+              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+              : "00:30" // valor por defecto si no hay eventos
+          }
+          slotLabelInterval={
+            initialEvents.length > 0
+              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+              : "00:30"
+          }
           timeZone="PY"
           droppable={true}
           dropAccept='.cool-event'
@@ -514,7 +520,7 @@ const renderEventContent = (eventInfo: EventContentArg) => {
   
   return (
     <div
-      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title}  |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
+      title={`${eventInfo.event.extendedProps.profesionalNombre}: ${eventInfo.event.title } |  ${moment(startTime).format("dddd D [de] MMMM [a las] HH:mm")}.`}
       className={`p-1 rounded-md ${eventClass} flex items-center gap-2 text-sm font-medium cursor-pointer`}
     >
 

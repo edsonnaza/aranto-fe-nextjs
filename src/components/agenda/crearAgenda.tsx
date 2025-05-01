@@ -101,7 +101,7 @@ const CrearAgenda = ({ profesionales }: { profesionales: { id: string; nombres: 
           <div>
             Agenda creada con éxito!{" "}
             <Link href="/dashboard/agenda" className="text-blue-500 underline">
-              Ver agendas  {transformedHorarios? JSON.stringify(transformedHorarios) : ""}
+              Ver agenda
             </Link>
           </div>,
           {

@@ -18,7 +18,13 @@ export default async function AgendaPage() {
 //       slots: { select: { estado: true } }, // Slots para contar disponibles
 //     },
 //   });
-  const events = await getTurnosDelDia();
+  const events = (await getTurnosDelDia()).map(event => ({
+    ...event,
+    extendedProps: {
+      ...event.extendedProps,
+     duracionSlot: '00:'+event.extendedProps.duracionSlot.toString()+':00',
+    },
+  }));
   console.log({events});
   // Transformar los datos para AgendaTable
 //   const agendaData = agendas.map((agenda) => ({

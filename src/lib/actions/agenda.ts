@@ -99,8 +99,8 @@ async function crearAgenda(
   for (const [dia, horarios] of Object.entries(dias)) {
     const manana = horarios[0];
     const tarde = horarios[1];
-    console.log({manana, tarde, fechaInicio});
-    console.log("Creando agenda para el día:", dia, "con horarios:", horarios);
+    // console.log({manana, tarde, fechaInicio});
+    //console.log("Creando agenda para el día:", dia, "con horarios:", horarios);
     await prisma.agendaDia.create({
       data: {
         agendaId: agenda.id,

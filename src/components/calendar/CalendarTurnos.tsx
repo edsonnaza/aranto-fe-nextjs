@@ -25,6 +25,7 @@ moment.locale("es");
 interface CalendarEvent extends EventInput {
   id: string;
   extendedProps: {
+    duracionSlot: string;
     calendar: "DISPONIBLE" | "OCUPADO" | "AGENDADO" | "BLOQUEADO" | "CANCELADO" | "ELIMINADO";
   };
 }
@@ -45,6 +46,13 @@ interface CalendarProps {
   initialEvents: CalendarEvent[];
 }
 
+interface CalendarEvent extends EventInput {
+  id: string;
+  extendedProps: {
+    duracionSlot: string;
+    calendar: "DISPONIBLE" | "OCUPADO" | "AGENDADO" | "BLOQUEADO" | "CANCELADO" | "ELIMINADO";
+  };
+}
 const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
   const calendarRef = useRef<FullCalendar>(null);
   const { data: session } = useSession();
@@ -210,7 +218,10 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
                   nuevoEstado === "DISPONIBLE" || nuevoEstado === "CANCELADO" || nuevoEstado === "ELIMINADO"
                     ? "Disponible"
                     : `${formData.nombres} ${formData.apellidos} (${formData.motivoConsulta})`,
-                extendedProps: { calendar: nuevoEstado },
+                    extendedProps: {
+                      ...event.extendedProps,
+                      calendar: nuevoEstado,
+                    },
               }
             : event
         )
@@ -242,17 +253,27 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
         <FullCalendar
           eventOverlap={false}
           plugins={[dayGridPlugin, timeGridPlugin]}
-          slotDuration="00:30:00"
-          slotLabelInterval="00:30"
+          slotDuration={
+            initialEvents.length > 0
+              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+              : "00:30:00" // valor por defecto si no hay eventos
+          }
+         // slotDuration={initialEvents.length > 0 ? initialEvents[0].extendedProps.duracionSlot : "00:30"}
+         
+          slotLabelInterval={
+            initialEvents.length > 0
+              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+              : "00:30"
+          }
           timeZone="PY"
           droppable={true}
           dropAccept='.cool-event'
           ref={calendarRef}
           initialView="timeGridDay"
           headerToolbar={{
-            left: "prev,next",
+            //left: "prev,next",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
+            right: "timeGridDay",
           }}
           events={events}
           eventContent={renderEventContent}

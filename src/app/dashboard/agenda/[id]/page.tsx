@@ -48,6 +48,7 @@ export default async function AgendaDetailPage({ params }: { params: Promise<{ i
     end: slot.horarioFin,
     extendedProps: {
       calendar: slot.estado,
+      duracionSlot: '00:'+agenda.duracionSlot.toString()+':00',
       profesionalNombre:profesionalNombre,
     },
   }));
