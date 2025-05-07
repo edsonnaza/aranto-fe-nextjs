@@ -1,43 +1,20 @@
-// dashboard/agenda/page.tsx
-//import { prisma } from "@/lib/prisma";
-//import AgendaTable from "@/components/agenda/AgendaTable";
 import Link from "next/link";
 import Button from "@/components/ui/button/Button";
-//import { formatDate } from "@/lib/utils"
 import { Suspense } from "react";
 import { CalendarDateRangeIcon } from "@heroicons/react/24/solid";
 import SkeletonLoader from "@/components/ui/SkeletonLoader";
-//import CalendarTurnos from "@/components/calendar/CalendarTurnos";
 import { getTurnosDelDia } from "@/lib/actions/turnos";
 import AgendaPorProfesional from "@/components/agenda/AgendaPorProfesional";
+import { calculateSlotDuration } from "@/lib/utils"; 
+
 export default async function AgendaPage() {
-  // Obtener todas las agendas desde Prisma
-//   const agendas = await prisma.agenda.findMany({
-//     include: {
-//       profesional: { select: { nombres: true, apellidos: true } }, // Datos del profesional
-//       slots: { select: { estado: true } }, // Slots para contar disponibles
-//     },
-//   });
   const events = (await getTurnosDelDia()).map(event => ({
     ...event,
     extendedProps: {
       ...event.extendedProps,
-     duracionSlot: '00:'+event.extendedProps.duracionSlot.toString()+':00',
+      duracionSlot: calculateSlotDuration(event.start, event.end),
     },
   }));
-  console.log({events});
-  // Transformar los datos para AgendaTable
-//   const agendaData = agendas.map((agenda) => ({
-//     id: agenda.id,
-//     profesional: `${agenda.profesional.nombres} ${agenda.profesional.apellidos}`,
-//     fechaInicio: formatDate(agenda.fechaInicio), // Formato YYYY-MM-DD
-//     fechaFin: formatDate(agenda.fechaFin) ,
-//     status: "Activa", // Puedes definir una lógica para el estado (ej. basado en fechas)
-//     slotsDisponibles: agenda.slots.filter((slot) => slot.estado === "DISPONIBLE").length,
-//     slotsTotales: agenda.slots.length,
-//   }));
-
-
 
   return (
     <div className="grid grid-cols-12 gap-4 md:gap-6">

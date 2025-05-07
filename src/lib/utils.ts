@@ -90,3 +90,18 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+
+export function calculateSlotDuration(start: Date | string, end: Date | string): string {
+  const startDate = typeof start === 'string' ? new Date(start) : start;
+  const endDate = typeof end === 'string' ? new Date(end) : end;
+  
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  
+  return `${Math.floor(diffMinutes / 60)}:${(diffMinutes % 60).toString().padStart(2, '0')}:00`;
+}
+
+export function getDurationInMinutes(duration: string): number {
+  const [hours, minutes] = duration.split(':').map(Number);
+  return (hours * 60) + minutes;
+}

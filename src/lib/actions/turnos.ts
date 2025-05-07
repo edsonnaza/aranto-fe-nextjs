@@ -44,7 +44,6 @@ export async function getPacientesConTurnos() {
 
   return events;
 }
-
 import { startOfDay, endOfDay } from "date-fns";
 
 export async function getTurnosDelDia() {
@@ -61,15 +60,16 @@ export async function getTurnosDelDia() {
       paciente: true,
       agenda: {
         select: {
+          id: true, // Añade esto para obtener el agendaId
           fechaInicio: true,
           fechaFin: true,
-          duracionSlot:true,
+          duracionSlot: true,
           profesional: { select: { nombres: true, apellidos: true } },
         },
       },
     },
     orderBy: {
-      horarioInicio: "asc", // ✅ Ordenar por hora
+      horarioInicio: "asc",
     },
   });
 
@@ -80,11 +80,14 @@ export async function getTurnosDelDia() {
     title: slot.paciente
       ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin motivo"})`
       : "Turno disponible",
-      contacto:slot.paciente?.contacto,
+    contacto: slot.paciente?.contacto,
     extendedProps: {
+      agendaId: slot.agenda.id, // Añadimos el agendaId aquí
       calendar: slot.estado,
       duracionSlot: slot.agenda.duracionSlot, 
       profesionalNombre: `${slot.agenda.profesional.nombres} ${slot.agenda.profesional.apellidos}`,
+      fechaInicio: slot.agenda.fechaInicio,
+      fechaFin: slot.agenda.fechaFin
     },
   }));
 

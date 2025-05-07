@@ -246,25 +246,20 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     CANCELADO: "bg-gray-200 text-black",
     ELIMINADO: "bg-gray-300 text-black",
   };
-
+  const duracionSlot = initialEvents.length > 0
+  ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+  : "00:30" // valor por defecto si no hay eventos
+const slotLabelInterval = initialEvents.length > 0
+? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+: "00:30"
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
         <FullCalendar
           eventOverlap={false}
           plugins={[dayGridPlugin, timeGridPlugin]}
-          slotDuration={
-            initialEvents.length > 0
-              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
-              : "00:30:00" // valor por defecto si no hay eventos
-          }
-         // slotDuration={initialEvents.length > 0 ? initialEvents[0].extendedProps.duracionSlot : "00:30"}
-         
-          slotLabelInterval={
-            initialEvents.length > 0
-              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
-              : "00:30"
-          }
+          slotDuration={duracionSlot}
+          slotLabelInterval={slotLabelInterval}
           timeZone="PY"
           droppable={true}
           dropAccept='.cool-event'

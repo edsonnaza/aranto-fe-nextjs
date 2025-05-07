@@ -19,6 +19,7 @@ interface Agenda {
   id: string;
   profesional: string;
   fechaInicio: string;
+  duracionSlot: string;
   fechaFin: string;
   status: string;
   slotsDisponibles: number;
@@ -73,6 +74,12 @@ export default function AgendaTable({ agendas, isLoading=false}: AgendaTableProp
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
+                  Duración
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
                   Estatus
                 </TableCell>
                 <TableCell
@@ -110,6 +117,9 @@ export default function AgendaTable({ agendas, isLoading=false}: AgendaTableProp
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {agenda.fechaInicio} - {agenda.fechaFin}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {agenda.duracionSlot} min
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       <Badge

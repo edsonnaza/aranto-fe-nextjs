@@ -26,6 +26,7 @@ export default async function AgendaPage() {
     status: "Activa", // Puedes definir una lógica para el estado (ej. basado en fechas)
     slotsDisponibles: agenda.slots.filter((slot) => slot.estado === "DISPONIBLE").length,
     slotsTotales: agenda.slots.length,
+    duracionSlot: agenda.slots.length > 0 ? agenda.duracionSlot.toString() : "0", // Asignar la duración del slot
   }));
 
   return (
@@ -37,7 +38,7 @@ export default async function AgendaPage() {
       </Button>
       </Link>
       <div className="col-span-12 space-y-6 xl:col-span-12">
-        <Suspense fallback={<SkeletonLoader type="table" columns={6} rows={5} />}> 
+        <Suspense fallback={<SkeletonLoader type="table" columns={7} rows={5} />}> 
          <AgendaTable agendas={agendaData}  isLoading = {false}/>
         </Suspense>
       </div>

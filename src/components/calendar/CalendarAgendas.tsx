@@ -17,7 +17,7 @@ import "moment-timezone"; // Importa la zona horaria
 import moment from "moment";
 import classNames from "classnames";
 
-import { FaLock } from "react-icons/fa"; // Importa el icono de bloqueo
+//import { FaLock } from "react-icons/fa"; // Importa el icono de bloqueo
  
 // Configurar moment en español
 moment.locale("es");
@@ -238,23 +238,22 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
     CANCELADO: "bg-gray-200 text-black",
     ELIMINADO: "bg-gray-300 text-black",
   };
-  
+
+  const duracionSlot = initialEvents.length > 0
+              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+              : "00:30" // valor por defecto si no hay eventos
+  const slotLabelInterval = initialEvents.length > 0
+    ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
+    : "00:30"
+  console.log({duracionSlot, initialEvents});
   return (
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
         <FullCalendar
           eventOverlap={false}
           plugins={[dayGridPlugin, timeGridPlugin]}
-          slotDuration={
-            initialEvents.length > 0
-              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
-              : "00:30" // valor por defecto si no hay eventos
-          }
-          slotLabelInterval={
-            initialEvents.length > 0
-              ? (initialEvents[0].extendedProps as CalendarEvent["extendedProps"]).duracionSlot
-              : "00:30"
-          }
+          slotDuration={duracionSlot}
+          slotLabelInterval={slotLabelInterval}
           timeZone="PY"
           droppable={true}
           dropAccept='.cool-event'
@@ -267,7 +266,7 @@ const CalendarAgendas: React.FC<CalendarProps> = ({ initialEvents }) => {
           }}
           events={events}
           eventContent={renderEventContent}
-          slotMinTime="07:00:00"
+          slotMinTime={"07:00:00"}
           slotMaxTime="23:00:00"
           allDaySlot={false}
           locale={esLocale}
@@ -513,10 +512,10 @@ const renderEventContent = (eventInfo: EventContentArg) => {
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
   };
 
-  const handleLockClick = (eventInfo: EventContentArg) => {
-    toast.info(`Bloqueando ${eventInfo.event.title}...`);
-    // Aquí puedes agregar la lógica para bloquear la agenda
-  };
+  // const handleLockClick = (eventInfo: EventContentArg) => {
+  //   toast.info(`Bloqueando ${eventInfo.event.title}...`);
+  //   // Aquí puedes agregar la lógica para bloquear la agenda
+  // };
   
   return (
     <div
@@ -531,10 +530,10 @@ const renderEventContent = (eventInfo: EventContentArg) => {
       {/* Ícono de bloqueo */}
       <span className="rounded-s text-opacity-35">
 
-      <FaLock
+      {/* <FaLock
         className="ml-auto text-gray-600 cursor-pointer hover:text-gray-800"
         onClick={() => handleLockClick(eventInfo)}
-        />
+        /> */}
       </span>
     </div>
   );

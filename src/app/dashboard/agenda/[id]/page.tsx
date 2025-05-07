@@ -1,7 +1,7 @@
 // src/app/dashboard/agenda/[id]/page.tsx
 import { prisma } from "@/lib/prisma";
 import Calendar from "@/components/calendar/CalendarAgendas";
-import { formatDate } from "@/lib/utils"; // Importar la función global
+import { formatDate, calculateSlotDuration } from "@/lib/utils"; // Importar la función global
  
  
 export default async function AgendaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,29 +37,33 @@ export default async function AgendaDetailPage({ params }: { params: Promise<{ i
   // Construir el título
   const title = `Agenda: ${profesionalNombre} [${fechaInicio} - ${fechaFin}]`;
 
-  const events = agenda.slots.map((slot) => ({
-    id: slot.id,
-    title: slot.estado === "DISPONIBLE"
-      ? "Disponible"
-      : slot.paciente
-      ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin Motivo"})`
-      : `Turno (${slot.estado})`,
-    start: slot.horarioInicio,
-    end: slot.horarioFin,
-    extendedProps: {
-      calendar: slot.estado,
-      duracionSlot: '00:'+agenda.duracionSlot.toString()+':00',
-      profesionalNombre:profesionalNombre,
-    },
-  }));
+  const events = agenda.slots.map((slot) => {
+    const duration = calculateSlotDuration(
+      new Date(slot.horarioInicio),
+      new Date(slot.horarioFin)
+    );
+  
+    return {
+      id: slot.id,
+      title: slot.estado === "DISPONIBLE"
+        ? "Disponible"
+        : slot.paciente
+        ? `${slot.paciente.nombres} ${slot.paciente.apellidos} (${slot.motivoConsulta || "Sin Motivo"})`
+        : `Turno (${slot.estado})`,
+      start: slot.horarioInicio,
+      end: slot.horarioFin,
+      extendedProps: {
+        calendar: slot.estado,
+        duracionSlot: duration, // Now properly calculated
+        profesionalNombre: profesionalNombre,
+      },
+    };
+  });
 
   return (
     <div className="p-4 mx-auto max-w-screen-2xl md:p-6">
       <h1 className="text-2xl font-semi-bold mb-4">{title}</h1>
-      
         <Calendar initialEvents={events} />
-       
-      
     </div>
   );
 }
